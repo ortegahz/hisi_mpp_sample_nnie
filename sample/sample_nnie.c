@@ -787,8 +787,11 @@ static HI_S32 SAMPLE_SVP_NNIE_Cnn_SoftwareDeinit(SAMPLE_SVP_NNIE_CNN_SOFTWARE_PA
 ******************************************************************************/
 static HI_S32 SAMPLE_SVP_NNIE_Cnn_Deinit(SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam,
     SAMPLE_SVP_NNIE_CNN_SOFTWARE_PARAM_S* pstSoftWareParam,SAMPLE_SVP_NNIE_MODEL_S* pstNnieModel)
-{
-
+{
+
+
+
+
     HI_S32 s32Ret = HI_SUCCESS;
     /*hardware para deinit*/
     if(pstNnieParam!=NULL)
@@ -3112,7 +3115,7 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     stNnieCfg.pszPic= pcSrcFile;
     stNnieCfg.u32MaxInputNum = u32PicNum; //max input image num in each batch
     stNnieCfg.u32MaxRoiNum = 0;
-    stNnieCfg.aenNnieCoreId[0] = SVP_NNIE_ID_0;//set NNIE core
+    stNnieCfg.aenNnieCoreId[0] = SVP_NNIE_ID_0;
 
     /*Sys init*/
     SAMPLE_COMM_SVP_CheckSysInit();
@@ -3124,9 +3127,6 @@ void SAMPLE_SVP_NNIE_Acfree(void)
         "Error,SAMPLE_COMM_SVP_NNIE_LoadModel failed!\n");
 
     /*TODO: Acfree parameter initialization*/
-    /*Acfree software parameters are set in SAMPLE_SVP_NNIE_Acfree_SoftwareInit,
-      if user has changed net struct, please make sure the parameter settings in
-      SAMPLE_SVP_NNIE_Acfree_SoftwareInit function are correct*/
     SAMPLE_SVP_TRACE_INFO("Acfree parameter initialization!\n");
     s_stAcfreeNnieParam.pstModel = &s_stAcfreeModel.stModel;
     s32Ret = SAMPLE_SVP_NNIE_Yolov2_ParamInit(&stNnieCfg,&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
@@ -3152,9 +3152,7 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_AFTER_DST_FLUSH_TIME()
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_OP_TIME()
 
-    /*Software process*/
-    /*if user has changed net struct, please make sure SAMPLE_SVP_NNIE_Yolov2_GetResult
-     function input datas are correct*/
+    /*TODO: Software process*/
     SAMPLE_SVP_NNIE_PERF_STAT_BEGIN()
     s32Ret = SAMPLE_SVP_NNIE_Yolov2_GetResult(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
     SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
@@ -3162,6 +3160,7 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_NNIE_PERF_STAT_END()
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME()
 
+    /*TODO: Print*/
      SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
     (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
         &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
@@ -3170,7 +3169,7 @@ void SAMPLE_SVP_NNIE_Acfree(void)
 
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
 
-
+/*TODO: Deinit*/
 Acfree_FAIL_0:
     SAMPLE_SVP_NNIE_Yolov2_Deinit(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam,&s_stAcfreeModel);
     SAMPLE_COMM_SVP_CheckSysExit();
@@ -3283,7 +3282,10 @@ void SAMPLE_SVP_NNIE_Yolov2_HandleSig(void)
 ******************************************************************************/
 static HI_S32 SAMPLE_SVP_NNIE_Lstm_Deinit(SAMPLE_SVP_NNIE_PARAM_S *pstNnieParamm,
     SAMPLE_SVP_NNIE_MODEL_S *pstNnieModel)
-{
+{
+
+
+
     HI_S32 s32Ret = HI_SUCCESS;
     /*hardware deinit*/
     if(pstNnieParamm!=NULL)

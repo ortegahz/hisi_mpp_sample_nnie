@@ -2,47 +2,10 @@
 export LC_ALL=C
 
 # board
+telnet 192.168.1.98 11023
 mount -t nfs 192.168.1.108:/home/manu/nfs /mnt_manu -o nolock && cd /mnt_manu/mpp/sample/svp/nnie
 
-# run and gdb
 ./sample_nnie_main b
 /mnt_manu/gdb/bin/gdbserver --remote-debug 192.168.1.108:8005 ./sample_nnie_main m
 /home/manu/nfs/gdb/bin/arm-himix200-linux-gdb ./sample_nnie_main m
 target remote 192.168.1.98:8005
-
-# vscode
-{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "(gdb) 启动",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/smp/a53_linux/mpp/sample/svp/nnie/sample_nnie_main",
-            "args": ["7m"],
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "为 gdb 启用整齐打印",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "将反汇编风格设置为 Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ],
-            "miDebuggerPath": "/home/manu/nfs/gdb/bin/arm-himix200-linux-gdb",
-            "miDebuggerServerAddress": "192.168.1.98:8005",
-        }
-
-    ]
-}
