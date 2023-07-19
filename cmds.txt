@@ -1,0 +1,11 @@
+# make
+export LC_ALL=C
+
+# board
+mount -t nfs 192.168.1.108:/home/manu/nfs /mnt_manu -o nolock && cd /mnt_manu/mpp/sample/svp/nnie
+
+# run and gdb
+./sample_nnie_main b
+/mnt_manu/gdb/bin/gdbserver --remote-debug 192.168.1.108:8005 ./sample_nnie_main m
+/home/manu/nfs/gdb/bin/arm-himix200-linux-gdb ./sample_nnie_main m
+target remote 192.168.1.98:8005
