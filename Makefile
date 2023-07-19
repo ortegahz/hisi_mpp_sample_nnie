@@ -1,4 +1,6 @@
 # Hisilicon Hi35xx sample Makefile
+CFLAGS += -DSAMPLE_SVP_NNIE_PERF_STAT
+
 include $(PWD)/../Makefile.param
 
 CFLAGS += -I$(PWD)/sample

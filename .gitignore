@@ -1,2 +1,9 @@
 
 data/
+sample_nnie_main\.o
+
+sample/sample_nnie\.o
+
+*.o
+
+sample_nnie_main
