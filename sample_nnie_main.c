@@ -189,6 +189,11 @@ int main(int argc, char *argv[])
     		  SAMPLE_SVP_NNIE_Rfcn_File();
     	    }
     	    break;
+        case 'b':
+            {
+                SAMPLE_SVP_NNIE_Acfree();
+            }
+            break;
         default :
             {
                 SAMPLE_SVP_Usage(argv[0]);

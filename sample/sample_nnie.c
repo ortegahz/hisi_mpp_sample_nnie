@@ -55,6 +55,10 @@ static SAMPLE_SVP_NNIE_YOLOV1_SOFTWARE_PARAM_S s_stYolov1SoftwareParam = {0};
 static SAMPLE_SVP_NNIE_MODEL_S s_stYolov2Model = {0};
 static SAMPLE_SVP_NNIE_PARAM_S s_stYolov2NnieParam = {0};
 static SAMPLE_SVP_NNIE_YOLOV2_SOFTWARE_PARAM_S s_stYolov2SoftwareParam = {0};
+/*Acfree para*/
+static SAMPLE_SVP_NNIE_MODEL_S s_stAcfreeModel = {0};
+static SAMPLE_SVP_NNIE_PARAM_S s_stAcfreeNnieParam = {0};
+static SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S s_stAcfreeSoftwareParam = {0};
 /*lstm para*/
 static SAMPLE_SVP_NNIE_MODEL_S s_stLstmModel = {0};
 static SAMPLE_SVP_NNIE_PARAM_S s_stLstmNnieParam = {0};
@@ -83,6 +87,7 @@ static SAMPLE_SVP_NNIE_FASTERRCNN_SOFTWARE_PARAM_S s_stPvanetSoftwareParam = {0}
     s_stYolov1Perf.stForwardPerf.u64OPTime/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES,s_stYolov1Perf.stGRPerf.u64OPTime/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES,\
     (s_stYolov1Perf.stForwardPerf.u64SrcFlushTime + s_stYolov1Perf.stForwardPerf.u64PreDstFulshTime + s_stYolov1Perf.stForwardPerf.u64AferDstFulshTime\
     + s_stYolov1Perf.stGRPerf.u64SrcFlushTime + s_stYolov1Perf.stGRPerf.u64PreDstFulshTime + s_stYolov1Perf.stGRPerf.u64AferDstFulshTime)/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES );
+
 /*Yolov2*/
 #define SAMPLE_SVP_NNIE_PERF_STAT_YOLOV2_FORWARD_SRC_FLUSH_TIME() s_stYolov2Perf.stForwardPerf.u64SrcFlushTime += s_stOpForwardPerfTmp.u64SrcFlushTime;
 #define SAMPLE_SVP_NNIE_PERF_STAT_YOLOV2_FORWARD_PRE_DST_FLUSH_TIME() s_stYolov2Perf.stForwardPerf.u64PreDstFulshTime += s_stOpForwardPerfTmp.u64PreDstFulshTime;
@@ -96,6 +101,20 @@ static SAMPLE_SVP_NNIE_FASTERRCNN_SOFTWARE_PARAM_S s_stPvanetSoftwareParam = {0}
     s_stYolov2Perf.stForwardPerf.u64OPTime/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES,s_stYolov2Perf.stGRPerf.u64OPTime/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES,\
     (s_stYolov2Perf.stForwardPerf.u64SrcFlushTime + s_stYolov2Perf.stForwardPerf.u64PreDstFulshTime + s_stYolov2Perf.stForwardPerf.u64AferDstFulshTime\
     + s_stYolov2Perf.stGRPerf.u64SrcFlushTime + s_stYolov2Perf.stGRPerf.u64PreDstFulshTime + s_stYolov2Perf.stGRPerf.u64AferDstFulshTime)/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES );
+
+/*Acfree*/
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_SRC_FLUSH_TIME() s_stAcfreePerf.stForwardPerf.u64SrcFlushTime += s_stOpForwardPerfTmp.u64SrcFlushTime;
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_PRE_DST_FLUSH_TIME() s_stAcfreePerf.stForwardPerf.u64PreDstFulshTime += s_stOpForwardPerfTmp.u64PreDstFulshTime;
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_AFTER_DST_FLUSH_TIME() s_stAcfreePerf.stForwardPerf.u64AferDstFulshTime += s_stOpForwardPerfTmp.u64AferDstFulshTime;
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_OP_TIME() s_stAcfreePerf.stForwardPerf.u64OPTime += s_stOpForwardPerfTmp.u64OPTime;
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_SRC_FLUSH_TIME() SAMPLE_SVP_NNIE_PERF_STAT_ADD_DIFF_TIME(s_stAcfreePerf.stGRPerf.u64SrcFlushTime);
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_PRE_DST_FLUSH_TIME() SAMPLE_SVP_NNIE_PERF_STAT_ADD_DIFF_TIME(s_stAcfreePerf.stGRPerf.u64PreDstFulshTime);
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_AFTER_DST_FLUSH_TIME() SAMPLE_SVP_NNIE_PERF_STAT_ADD_DIFF_TIME(s_stAcfreePerf.stGRPerf.u64AferDstFulshTime);
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME() SAMPLE_SVP_NNIE_PERF_STAT_ADD_DIFF_TIME(s_stAcfreePerf.stGRPerf.u64OPTime);
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT() printf("Acfree Forward time: %llu us,GR time:%llu us,Flush time: %llu us\n",\
+    s_stAcfreePerf.stForwardPerf.u64OPTime/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES,s_stAcfreePerf.stGRPerf.u64OPTime/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES,\
+    (s_stAcfreePerf.stForwardPerf.u64SrcFlushTime + s_stAcfreePerf.stForwardPerf.u64PreDstFulshTime + s_stAcfreePerf.stForwardPerf.u64AferDstFulshTime\
+    + s_stAcfreePerf.stGRPerf.u64SrcFlushTime + s_stAcfreePerf.stGRPerf.u64PreDstFulshTime + s_stAcfreePerf.stGRPerf.u64AferDstFulshTime)/SAMPLE_SVP_NNIE_PERF_STAT_LOOP_TIMES );
 
 /*SSD*/
 #define SAMPLE_SVP_NNIE_PERF_STAT_SSD_FORWARD_SRC_FLUSH_TIME() s_stSsdPerf.stForwardPerf.u64SrcFlushTime += s_stOpForwardPerfTmp.u64SrcFlushTime;
@@ -187,6 +206,7 @@ static SAMPLE_SVP_NNIE_FASTERRCNN_SOFTWARE_PARAM_S s_stPvanetSoftwareParam = {0}
 
 static SAMPLE_SVP_NNIE_YOLO_PERF_STAT_S s_stYolov1Perf = {0};
 static SAMPLE_SVP_NNIE_YOLO_PERF_STAT_S s_stYolov2Perf = {0};
+static SAMPLE_SVP_NNIE_YOLO_PERF_STAT_S s_stAcfreePerf = {0};
 static SAMPLE_SVP_NNIE_SSD_PERF_STAT_S  s_stSsdPerf = {0};
 static SAMPLE_SVP_NNIE_PVANET_PERF_STAT_S s_stPvanetPerf = {0};
 static SAMPLE_SVP_NNIE_RFCN_PERF_STAT_S s_stRfcnPerf = {0};
@@ -221,6 +241,18 @@ extern SAMPLE_SVP_NNIE_OP_PERF_STAT_S   g_stOpRpnPerfTmp;
 #define SAMPLE_SVP_NNIE_PERF_STAT_YOLOV2_GR_AFTER_DST_FLUSH_TIME()
 #define SAMPLE_SVP_NNIE_PERF_STAT_YOLOV2_GR_OP_TIME()
 #define SAMPLE_SVP_NNIE_PERF_STAT_YOLOV2_PRINT()
+
+/*Acfree*/
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_SRC_FLUSH_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_PRE_DST_FLUSH_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_AFTER_DST_FLUSH_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_OP_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_SRC_FLUSH_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_PRE_DST_FLUSH_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_AFTER_DST_FLUSH_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME()
+#define SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
+
 /*SSD*/
 #define SAMPLE_SVP_NNIE_PERF_STAT_SSD_FORWARD_SRC_FLUSH_TIME()
 #define SAMPLE_SVP_NNIE_PERF_STAT_SSD_FORWARD_PRE_DST_FLUSH_TIME()
@@ -3028,6 +3060,120 @@ INIT_FAIL_0:
             "Error(%#x),SAMPLE_SVP_NNIE_Yolov1_Deinit failed!\n",s32Ret);
     return HI_FAILURE;
 
+}
+
+
+/******************************************************************************
+* function : Acfree init
+******************************************************************************/
+static HI_S32 SAMPLE_SVP_NNIE_Acfree_ParamInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
+    SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam, SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftWareParam)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    /*init hardware para*/
+    s32Ret = SAMPLE_COMM_SVP_NNIE_ParamInit(pstCfg,pstNnieParam);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,INIT_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error(%#x),SAMPLE_COMM_SVP_NNIE_ParamInit failed!\n",s32Ret);
+
+    /*init software para*/
+    s32Ret = SAMPLE_SVP_NNIE_Yolov2_SoftwareInit(pstCfg,pstNnieParam,
+        pstSoftWareParam);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,INIT_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error(%#x),SAMPLE_SVP_NNIE_Yolov1_SoftwareInit failed!\n",s32Ret);
+
+    return s32Ret;
+INIT_FAIL_0:
+    s32Ret = SAMPLE_SVP_NNIE_Yolov2_Deinit(pstNnieParam,pstSoftWareParam,NULL);
+    SAMPLE_SVP_CHECK_EXPR_RET(HI_SUCCESS != s32Ret,s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
+            "Error(%#x),SAMPLE_SVP_NNIE_Yolov1_Deinit failed!\n",s32Ret);
+    return HI_FAILURE;
+
+}
+
+
+/******************************************************************************
+* function : show Acfree sample(image 416x416 U8_C3)
+******************************************************************************/
+void SAMPLE_SVP_NNIE_Acfree(void)
+{
+    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/students_lt_640x640.bgr";
+    HI_CHAR *pcModelName = "./data/nnie_model/detection/acfree.wk";
+    HI_U32 u32PicNum = 1;
+    HI_FLOAT f32PrintResultThresh = 0.0f;
+    HI_S32 s32Ret = HI_SUCCESS;
+    SAMPLE_SVP_NNIE_CFG_S   stNnieCfg = {0};
+    SAMPLE_SVP_NNIE_INPUT_DATA_INDEX_S stInputDataIdx = {0};
+    SAMPLE_SVP_NNIE_PROCESS_SEG_INDEX_S stProcSegIdx = {0};
+    SAMPLE_SVP_NIE_PERF_STAT_DEF_FRM_VAR()
+    SAMPLE_SVP_NIE_PERF_STAT_DEF_VAR()
+
+    /*Set configuration parameter*/
+    f32PrintResultThresh = 0.25f;
+    stNnieCfg.pszPic= pcSrcFile;
+    stNnieCfg.u32MaxInputNum = u32PicNum; //max input image num in each batch
+    stNnieCfg.u32MaxRoiNum = 0;
+    stNnieCfg.aenNnieCoreId[0] = SVP_NNIE_ID_0;//set NNIE core
+
+    /*Sys init*/
+    SAMPLE_COMM_SVP_CheckSysInit();
+
+    /*Acfree Load model*/
+    SAMPLE_SVP_TRACE_INFO("Acfree Load model!\n");
+    s32Ret = SAMPLE_COMM_SVP_NNIE_LoadModel(pcModelName,&s_stAcfreeModel);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error,SAMPLE_COMM_SVP_NNIE_LoadModel failed!\n");
+
+    /*TODO: Acfree parameter initialization*/
+    /*Acfree software parameters are set in SAMPLE_SVP_NNIE_Acfree_SoftwareInit,
+      if user has changed net struct, please make sure the parameter settings in
+      SAMPLE_SVP_NNIE_Acfree_SoftwareInit function are correct*/
+    SAMPLE_SVP_TRACE_INFO("Acfree parameter initialization!\n");
+    s_stAcfreeNnieParam.pstModel = &s_stAcfreeModel.stModel;
+    s32Ret = SAMPLE_SVP_NNIE_Yolov2_ParamInit(&stNnieCfg,&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error,SAMPLE_SVP_NNIE_Acfree_ParamInit failed!\n");
+
+    /*Fill src data*/
+    SAMPLE_SVP_TRACE_INFO("Acfree start!\n");
+    SAMPLE_SVP_NNIE_PERF_STAT_BEGIN_LOOP()
+    stInputDataIdx.u32SegIdx = 0;
+    stInputDataIdx.u32NodeIdx = 0;
+    s32Ret = SAMPLE_SVP_NNIE_FillSrcData(&stNnieCfg,&s_stAcfreeNnieParam,&stInputDataIdx);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error,SAMPLE_SVP_NNIE_FillSrcData failed!\n");
+
+    /*NNIE process(process the 0-th segment)*/
+    stProcSegIdx.u32SegIdx = 0;
+    s32Ret = SAMPLE_SVP_NNIE_Forward(&s_stAcfreeNnieParam,&stInputDataIdx,&stProcSegIdx,HI_TRUE);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error,SAMPLE_SVP_NNIE_Forward failed!\n");
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_SRC_FLUSH_TIME()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_PRE_DST_FLUSH_TIME()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_AFTER_DST_FLUSH_TIME()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_OP_TIME()
+
+    /*Software process*/
+    /*if user has changed net struct, please make sure SAMPLE_SVP_NNIE_Yolov2_GetResult
+     function input datas are correct*/
+    SAMPLE_SVP_NNIE_PERF_STAT_BEGIN()
+    s32Ret = SAMPLE_SVP_NNIE_Yolov2_GetResult(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error,SAMPLE_SVP_NNIE_Yolov2_GetResult failed!\n");
+    SAMPLE_SVP_NNIE_PERF_STAT_END()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME()
+
+     SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
+    (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
+        &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
+
+    SAMPLE_SVP_NNIE_PERF_STAT_END_LOOP()
+
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
+
+
+Acfree_FAIL_0:
+    SAMPLE_SVP_NNIE_Yolov2_Deinit(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam,&s_stAcfreeModel);
+    SAMPLE_COMM_SVP_CheckSysExit();
 }
 
 
