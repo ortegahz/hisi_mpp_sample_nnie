@@ -74,6 +74,17 @@ typedef struct hiSAMPLE_SVP_NNIE_YOLOV2_BBOX
     HI_U32 u32Mask;
 }SAMPLE_SVP_NNIE_YOLOV2_BBOX_S;
 
+typedef struct hiSAMPLE_SVP_NNIE_ACFREE_BBOX
+{
+    HI_FLOAT f32Xmin;
+    HI_FLOAT f32Xmax;
+    HI_FLOAT f32Ymin;
+    HI_FLOAT f32Ymax;
+    HI_S32 s32ClsScore;
+    HI_U32 u32ClassIdx;
+    HI_U32 u32Mask;
+}SAMPLE_SVP_NNIE_ACFREE_BBOX_S;
+
 /*CNN*/
 HI_S32 SAMPLE_SVP_NNIE_Cnn_GetTopN(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
     SAMPLE_SVP_NNIE_CNN_SOFTWARE_PARAM_S* pstSoftwareParam);
@@ -131,6 +142,13 @@ HI_U32 SAMPLE_SVP_NNIE_Yolov2_GetResultTmpBuf(SAMPLE_SVP_NNIE_PARAM_S*pstNniePar
 
 HI_S32 SAMPLE_SVP_NNIE_Yolov2_GetResult(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
     SAMPLE_SVP_NNIE_YOLOV2_SOFTWARE_PARAM_S* pstSoftwareParam);
+
+/*ACFREE*/
+HI_U32 SAMPLE_SVP_NNIE_Acfree_GetResultTmpBuf(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
+    SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftwareParam);
+
+HI_S32 SAMPLE_SVP_NNIE_Acfree_GetResult(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
+    SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftwareParam);
 #ifdef __cplusplus
 }
 #endif
