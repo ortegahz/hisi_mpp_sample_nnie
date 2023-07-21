@@ -3468,6 +3468,8 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_NNIE_CFG_S   stNnieCfg = {0};
     SAMPLE_SVP_NNIE_INPUT_DATA_INDEX_S stInputDataIdx = {0};
     SAMPLE_SVP_NNIE_PROCESS_SEG_INDEX_S stProcSegIdx = {0};
+    SAMPLE_SVP_NIE_PERF_STAT_DEF_FRM_VAR()
+    SAMPLE_SVP_NIE_PERF_STAT_DEF_VAR()
 
     /*Set configuration parameter*/
     f32PrintResultThresh = 0.8f;
@@ -3494,6 +3496,7 @@ void SAMPLE_SVP_NNIE_Acfree(void)
 
     /*Fill src data*/
     SAMPLE_SVP_TRACE_INFO("Acfree start!\n");
+    SAMPLE_SVP_NNIE_PERF_STAT_BEGIN_LOOP()
     stInputDataIdx.u32SegIdx = 0;
     stInputDataIdx.u32NodeIdx = 0;
     s32Ret = SAMPLE_SVP_NNIE_FillSrcData(&stNnieCfg,&s_stAcfreeNnieParam,&stInputDataIdx);
@@ -3505,16 +3508,27 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     s32Ret = SAMPLE_SVP_NNIE_Forward(&s_stAcfreeNnieParam,&stInputDataIdx,&stProcSegIdx,HI_TRUE);
     SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_SVP_NNIE_Forward failed!\n");
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_SRC_FLUSH_TIME()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_PRE_DST_FLUSH_TIME()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_AFTER_DST_FLUSH_TIME()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_OP_TIME()
 
     /*Software process*/
+    SAMPLE_SVP_NNIE_PERF_STAT_BEGIN()
     s32Ret = SAMPLE_SVP_NNIE_Acfree_GetResult(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
     SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_SVP_NNIE_Acfree_GetResult failed!\n");
+    SAMPLE_SVP_NNIE_PERF_STAT_END()
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME()
 
      /*print result, this sample has 1 classes*/
     SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
     (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
         &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
+
+    SAMPLE_SVP_NNIE_PERF_STAT_END_LOOP()
+
+    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
 
 
 ACFREE_FAIL_0:
