@@ -194,6 +194,11 @@ int main(int argc, char *argv[])
                 SAMPLE_SVP_NNIE_Acfree();
             }
             break;
+        case 'c':
+            {
+                SAMPLE_SVP_NNIE_Yolov3();
+            }
+            break;
         default :
             {
                 SAMPLE_SVP_Usage(argv[0]);

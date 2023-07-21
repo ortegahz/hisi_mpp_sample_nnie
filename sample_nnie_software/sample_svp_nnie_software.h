@@ -41,6 +41,9 @@ extern "C" {
 #define SAMPLE_SVP_NNIE_MAX_VLAUE_OF_ANCHOR_SCALE  500*4096 /*The maximum value of minimum anchor size*/
 #define SAMPLE_SVP_NNIE_USE_MUL_THREAD            1 /*Use multi thread*/
 #define SAMPLE_SVP_NNIE_MAX_THREAD_NUM            4 /*Multi thread number*/
+#define SAMPLE_SVP_NNIE_YOLOV3_REPORT_BLOB_NUM    3 /*yolov3 report blob num*/
+#define SAMPLE_SVP_NNIE_YOLOV3_EACH_GRID_BIAS_NUM 6 /*yolov3 bias num of each grid*/
+#define SAMPLE_SVP_NNIE_YOLOV3_EACH_BBOX_INFER_RESULT_NUM   85 /*yolov3 inference result num of each bbox*/
 
 /*CNN GetTopN unit*/
 typedef struct hiSAMPLE_SVP_NNIE_CNN_GETTOPN_UNIT_S
@@ -73,6 +76,8 @@ typedef struct hiSAMPLE_SVP_NNIE_YOLOV2_BBOX
     HI_U32 u32ClassIdx;
     HI_U32 u32Mask;
 }SAMPLE_SVP_NNIE_YOLOV2_BBOX_S;
+
+typedef SAMPLE_SVP_NNIE_YOLOV2_BBOX_S SAMPLE_SVP_NNIE_YOLOV3_BBOX_S;
 
 typedef struct hiSAMPLE_SVP_NNIE_ACFREE_BBOX
 {
@@ -149,6 +154,13 @@ HI_U32 SAMPLE_SVP_NNIE_Acfree_GetResultTmpBuf(SAMPLE_SVP_NNIE_PARAM_S*pstNniePar
 
 HI_S32 SAMPLE_SVP_NNIE_Acfree_GetResult(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
     SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftwareParam);
+
+/*YOLOV3*/
+HI_U32 SAMPLE_SVP_NNIE_Yolov3_GetResultTmpBuf(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
+    SAMPLE_SVP_NNIE_YOLOV3_SOFTWARE_PARAM_S* pstSoftwareParam);
+
+HI_S32 SAMPLE_SVP_NNIE_Yolov3_GetResult(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
+    SAMPLE_SVP_NNIE_YOLOV3_SOFTWARE_PARAM_S* pstSoftwareParam);
 #ifdef __cplusplus
 }
 #endif
