@@ -2895,6 +2895,30 @@ void SAMPLE_SVP_NNIE_Yolov1_HandleSig(void)
 }
 
 /******************************************************************************
+* function : Acfree software deinit
+******************************************************************************/
+static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareDeinit(SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftWareParam)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    SAMPLE_SVP_CHECK_EXPR_RET(NULL== pstSoftWareParam,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error, pstSoftWareParam can't be NULL!\n");
+    if(0!=pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr && 0!=pstSoftWareParam->stGetResultTmpBuf.u64VirAddr)
+    {
+        SAMPLE_SVP_MMZ_FREE(pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr,
+            pstSoftWareParam->stGetResultTmpBuf.u64VirAddr);
+        pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr = 0;
+        pstSoftWareParam->stGetResultTmpBuf.u64VirAddr = 0;
+        pstSoftWareParam->stDstRoi.u64PhyAddr = 0;
+        pstSoftWareParam->stDstRoi.u64VirAddr = 0;
+        pstSoftWareParam->stDstScore.u64PhyAddr = 0;
+        pstSoftWareParam->stDstScore.u64VirAddr = 0;
+        pstSoftWareParam->stClassRoiNum.u64PhyAddr = 0;
+        pstSoftWareParam->stClassRoiNum.u64VirAddr = 0;
+    }
+    return s32Ret;
+}
+
+/******************************************************************************
 * function : Yolov3 software deinit
 ******************************************************************************/
 static HI_S32 SAMPLE_SVP_NNIE_Yolov3_SoftwareDeinit(SAMPLE_SVP_NNIE_YOLOV3_SOFTWARE_PARAM_S* pstSoftWareParam)
@@ -2944,25 +2968,32 @@ static HI_S32 SAMPLE_SVP_NNIE_Yolov2_SoftwareDeinit(SAMPLE_SVP_NNIE_YOLOV2_SOFTW
 
 
 /******************************************************************************
-* function : Acfree software deinit
+* function : Acfree Deinit
 ******************************************************************************/
-static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareDeinit(SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftWareParam)
+static HI_S32 SAMPLE_SVP_NNIE_Acfree_Deinit(SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam,
+    SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftWareParam,SAMPLE_SVP_NNIE_MODEL_S *pstNnieModel)
 {
     HI_S32 s32Ret = HI_SUCCESS;
-    SAMPLE_SVP_CHECK_EXPR_RET(NULL== pstSoftWareParam,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
-        "Error, pstSoftWareParam can't be NULL!\n");
-    if(0!=pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr && 0!=pstSoftWareParam->stGetResultTmpBuf.u64VirAddr)
+    /*hardware deinit*/
+    if(pstNnieParam!=NULL)
     {
-        SAMPLE_SVP_MMZ_FREE(pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr,
-            pstSoftWareParam->stGetResultTmpBuf.u64VirAddr);
-        pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr = 0;
-        pstSoftWareParam->stGetResultTmpBuf.u64VirAddr = 0;
-        pstSoftWareParam->stDstRoi.u64PhyAddr = 0;
-        pstSoftWareParam->stDstRoi.u64VirAddr = 0;
-        pstSoftWareParam->stDstScore.u64PhyAddr = 0;
-        pstSoftWareParam->stDstScore.u64VirAddr = 0;
-        pstSoftWareParam->stClassRoiNum.u64PhyAddr = 0;
-        pstSoftWareParam->stClassRoiNum.u64VirAddr = 0;
+        s32Ret = SAMPLE_COMM_SVP_NNIE_ParamDeinit(pstNnieParam);
+        SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
+            "Error,SAMPLE_COMM_SVP_NNIE_ParamDeinit failed!\n");
+    }
+    /*software deinit*/
+    if(pstSoftWareParam!=NULL)
+    {
+        s32Ret = SAMPLE_SVP_NNIE_Acfree_SoftwareDeinit(pstSoftWareParam);
+        SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
+            "Error,SAMPLE_SVP_NNIE_Acfree_SoftwareDeinit failed!\n");
+    }
+    /*model deinit*/
+    if(pstNnieModel!=NULL)
+    {
+        s32Ret = SAMPLE_COMM_SVP_NNIE_UnloadModel(pstNnieModel);
+        SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
+            "Error,SAMPLE_COMM_SVP_NNIE_UnloadModel failed!\n");
     }
     return s32Ret;
 }
@@ -3020,38 +3051,6 @@ static HI_S32 SAMPLE_SVP_NNIE_Yolov2_Deinit(SAMPLE_SVP_NNIE_PARAM_S *pstNniePara
         s32Ret = SAMPLE_SVP_NNIE_Yolov2_SoftwareDeinit(pstSoftWareParam);
         SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
             "Error,SAMPLE_SVP_NNIE_Yolov2_SoftwareDeinit failed!\n");
-    }
-    /*model deinit*/
-    if(pstNnieModel!=NULL)
-    {
-        s32Ret = SAMPLE_COMM_SVP_NNIE_UnloadModel(pstNnieModel);
-        SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
-            "Error,SAMPLE_COMM_SVP_NNIE_UnloadModel failed!\n");
-    }
-    return s32Ret;
-}
-
-
-/******************************************************************************
-* function : Acfree Deinit
-******************************************************************************/
-static HI_S32 SAMPLE_SVP_NNIE_Acfree_Deinit(SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam,
-    SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftWareParam,SAMPLE_SVP_NNIE_MODEL_S *pstNnieModel)
-{
-    HI_S32 s32Ret = HI_SUCCESS;
-    /*hardware deinit*/
-    if(pstNnieParam!=NULL)
-    {
-        s32Ret = SAMPLE_COMM_SVP_NNIE_ParamDeinit(pstNnieParam);
-        SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
-            "Error,SAMPLE_COMM_SVP_NNIE_ParamDeinit failed!\n");
-    }
-    /*software deinit*/
-    if(pstSoftWareParam!=NULL)
-    {
-        s32Ret = SAMPLE_SVP_NNIE_Acfree_SoftwareDeinit(pstSoftWareParam);
-        SAMPLE_SVP_CHECK_EXPR_TRACE(HI_SUCCESS != s32Ret,SAMPLE_SVP_ERR_LEVEL_ERROR,
-            "Error,SAMPLE_SVP_NNIE_Acfree_SoftwareDeinit failed!\n");
     }
     /*model deinit*/
     if(pstNnieModel!=NULL)
@@ -3266,14 +3265,13 @@ static HI_S32 SAMPLE_SVP_NNIE_Yolov2_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
 
 
 /******************************************************************************
-* function : Yolov2 software para init
+* function : Acfree software para init
 ******************************************************************************/
 static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
     SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam, SAMPLE_SVP_NNIE_ACFREE_SOFTWARE_PARAM_S* pstSoftWareParam)
 {
     HI_S32 s32Ret = HI_SUCCESS;
     HI_U32 u32ClassNum = 0;
-    HI_U32 u32BboxNum = 0;
     HI_U32 u32TotalSize = 0;
     HI_U32 u32DstRoiSize = 0;
     HI_U32 u32DstScoreSize = 0;
@@ -3284,31 +3282,45 @@ static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
 
     pstSoftWareParam->u32OriImHeight = pstNnieParam->astSegData[0].astSrc[0].unShape.stWhc.u32Height;
     pstSoftWareParam->u32OriImWidth = pstNnieParam->astSegData[0].astSrc[0].unShape.stWhc.u32Width;
-    pstSoftWareParam->u32BboxNumEachGrid = 5;
-    pstSoftWareParam->u32ClassNum = 5;
-    pstSoftWareParam->u32GridNumHeight = 13;
-    pstSoftWareParam->u32GridNumWidth = 13;
+    pstSoftWareParam->u32BboxNumEachGrid = 3;
+    pstSoftWareParam->u32ClassNum = 80;
+    pstSoftWareParam->au32GridNumHeight[0] = 13;
+    pstSoftWareParam->au32GridNumHeight[1] = 26;
+    pstSoftWareParam->au32GridNumHeight[2] = 52;
+    pstSoftWareParam->au32GridNumWidth[0] = 13;
+    pstSoftWareParam->au32GridNumWidth[1] = 26;
+    pstSoftWareParam->au32GridNumWidth[2] = 52;
     pstSoftWareParam->u32NmsThresh = (HI_U32)(0.3f*SAMPLE_SVP_NNIE_QUANT_BASE);
-    pstSoftWareParam->u32ConfThresh = (HI_U32)(0.25f*SAMPLE_SVP_NNIE_QUANT_BASE);
+    pstSoftWareParam->u32ConfThresh = (HI_U32)(0.5f*SAMPLE_SVP_NNIE_QUANT_BASE);
     pstSoftWareParam->u32MaxRoiNum = 10;
-    pstSoftWareParam->af32Bias[0] = 1.08;
-    pstSoftWareParam->af32Bias[1] = 1.19;
-    pstSoftWareParam->af32Bias[2] = 3.42;
-    pstSoftWareParam->af32Bias[3] = 4.41;
-    pstSoftWareParam->af32Bias[4] = 6.63;
-    pstSoftWareParam->af32Bias[5] = 11.38;
-    pstSoftWareParam->af32Bias[6] = 9.42;
-    pstSoftWareParam->af32Bias[7] = 5.11;
-    pstSoftWareParam->af32Bias[8] = 16.62;
-    pstSoftWareParam->af32Bias[9] = 10.52;
+    pstSoftWareParam->af32Bias[0][0] = 116;
+    pstSoftWareParam->af32Bias[0][1] = 90;
+    pstSoftWareParam->af32Bias[0][2] = 156;
+    pstSoftWareParam->af32Bias[0][3] = 198;
+    pstSoftWareParam->af32Bias[0][4] = 373;
+    pstSoftWareParam->af32Bias[0][5] = 326;
+    pstSoftWareParam->af32Bias[1][0] = 30;
+    pstSoftWareParam->af32Bias[1][1] = 61;
+    pstSoftWareParam->af32Bias[1][2] = 62;
+    pstSoftWareParam->af32Bias[1][3] = 45;
+    pstSoftWareParam->af32Bias[1][4] = 59;
+    pstSoftWareParam->af32Bias[1][5] = 119;
+    pstSoftWareParam->af32Bias[2][0] = 10;
+    pstSoftWareParam->af32Bias[2][1] = 13;
+    pstSoftWareParam->af32Bias[2][2] = 16;
+    pstSoftWareParam->af32Bias[2][3] = 30;
+    pstSoftWareParam->af32Bias[2][4] = 33;
+    pstSoftWareParam->af32Bias[2][5] = 23;
 
     /*Malloc assist buffer memory*/
     u32ClassNum = pstSoftWareParam->u32ClassNum+1;
-    u32BboxNum = pstSoftWareParam->u32BboxNumEachGrid*pstSoftWareParam->u32GridNumHeight*
-        pstSoftWareParam->u32GridNumWidth;
+
+    SAMPLE_SVP_CHECK_EXPR_RET(SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM != pstNnieParam->pstModel->astSeg[0].u16DstNum,
+        HI_FAILURE,SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,pstNnieParam->pstModel->astSeg[0].u16DstNum(%d) should be %d!\n",
+        pstNnieParam->pstModel->astSeg[0].u16DstNum,SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM);
     u32TmpBufTotalSize = SAMPLE_SVP_NNIE_Acfree_GetResultTmpBuf(pstNnieParam,pstSoftWareParam);
-    u32DstRoiSize = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*u32BboxNum*SAMPLE_SVP_NNIE_COORDI_NUM);
-    u32DstScoreSize = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*u32BboxNum*sizeof(HI_U32));
+    u32DstRoiSize = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*pstSoftWareParam->u32MaxRoiNum*sizeof(HI_U32)*SAMPLE_SVP_NNIE_COORDI_NUM);
+    u32DstScoreSize = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*pstSoftWareParam->u32MaxRoiNum*sizeof(HI_U32));
     u32ClassRoiNumSize = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*sizeof(HI_U32));
     u32TotalSize = u32TotalSize+u32DstRoiSize+u32DstScoreSize+u32ClassRoiNumSize+u32TmpBufTotalSize;
     s32Ret = SAMPLE_COMM_SVP_MallocCached("SAMPLE_ACFREE_INIT",NULL,(HI_U64*)&u64PhyAddr,
@@ -3320,34 +3332,34 @@ static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
 
    /*set each tmp buffer addr*/
     pstSoftWareParam->stGetResultTmpBuf.u64PhyAddr = u64PhyAddr;
-    pstSoftWareParam->stGetResultTmpBuf.u64VirAddr = (HI_U64)((HI_UL)pu8VirAddr);
+    pstSoftWareParam->stGetResultTmpBuf.u64VirAddr = (HI_U64)(pu8VirAddr);
 
     /*set result blob*/
     pstSoftWareParam->stDstRoi.enType = SVP_BLOB_TYPE_S32;
     pstSoftWareParam->stDstRoi.u64PhyAddr = u64PhyAddr+u32TmpBufTotalSize;
-    pstSoftWareParam->stDstRoi.u64VirAddr = (HI_U64)((HI_UL)pu8VirAddr+u32TmpBufTotalSize);
+    pstSoftWareParam->stDstRoi.u64VirAddr = (HI_U64)(pu8VirAddr+u32TmpBufTotalSize);
     pstSoftWareParam->stDstRoi.u32Stride = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*
-        u32BboxNum*sizeof(HI_U32)*SAMPLE_SVP_NNIE_COORDI_NUM);
+        pstSoftWareParam->u32MaxRoiNum*sizeof(HI_U32)*SAMPLE_SVP_NNIE_COORDI_NUM);
     pstSoftWareParam->stDstRoi.u32Num = 1;
     pstSoftWareParam->stDstRoi.unShape.stWhc.u32Chn = 1;
     pstSoftWareParam->stDstRoi.unShape.stWhc.u32Height = 1;
     pstSoftWareParam->stDstRoi.unShape.stWhc.u32Width = u32ClassNum*
-        u32BboxNum*SAMPLE_SVP_NNIE_COORDI_NUM;
+        pstSoftWareParam->u32MaxRoiNum*SAMPLE_SVP_NNIE_COORDI_NUM;
 
     pstSoftWareParam->stDstScore.enType = SVP_BLOB_TYPE_S32;
     pstSoftWareParam->stDstScore.u64PhyAddr = u64PhyAddr+u32TmpBufTotalSize+u32DstRoiSize;
-    pstSoftWareParam->stDstScore.u64VirAddr = (HI_U64)((HI_UL)pu8VirAddr+u32TmpBufTotalSize+u32DstRoiSize);
+    pstSoftWareParam->stDstScore.u64VirAddr = (HI_U64)(pu8VirAddr+u32TmpBufTotalSize+u32DstRoiSize);
     pstSoftWareParam->stDstScore.u32Stride = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*
-        u32BboxNum*sizeof(HI_U32));
+        pstSoftWareParam->u32MaxRoiNum*sizeof(HI_U32));
     pstSoftWareParam->stDstScore.u32Num = 1;
     pstSoftWareParam->stDstScore.unShape.stWhc.u32Chn = 1;
     pstSoftWareParam->stDstScore.unShape.stWhc.u32Height = 1;
-    pstSoftWareParam->stDstScore.unShape.stWhc.u32Width = u32ClassNum*u32BboxNum;
+    pstSoftWareParam->stDstScore.unShape.stWhc.u32Width = u32ClassNum*pstSoftWareParam->u32MaxRoiNum;
 
     pstSoftWareParam->stClassRoiNum.enType = SVP_BLOB_TYPE_S32;
     pstSoftWareParam->stClassRoiNum.u64PhyAddr = u64PhyAddr+u32TmpBufTotalSize+
         u32DstRoiSize+u32DstScoreSize;
-    pstSoftWareParam->stClassRoiNum.u64VirAddr = (HI_U64)((HI_UL)pu8VirAddr+u32TmpBufTotalSize+
+    pstSoftWareParam->stClassRoiNum.u64VirAddr = (HI_U64)(pu8VirAddr+u32TmpBufTotalSize+
         u32DstRoiSize+u32DstScoreSize);
     pstSoftWareParam->stClassRoiNum.u32Stride = SAMPLE_SVP_NNIE_ALIGN16(u32ClassNum*sizeof(HI_U32));
     pstSoftWareParam->stClassRoiNum.u32Num = 1;
@@ -3448,26 +3460,21 @@ INIT_FAIL_0:
 ******************************************************************************/
 void SAMPLE_SVP_NNIE_Acfree(void)
 {
-    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/students_lt_640x640.bgr";
-    HI_CHAR *pcModelName = "./data/nnie_model/detection/acfree.wk";
+    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/dog_bike_car_416x416.bgr";
+    HI_CHAR *pcModelName = "./data/nnie_model/detection/inst_yolov3_inst.wk";
     HI_U32 u32PicNum = 1;
     HI_FLOAT f32PrintResultThresh = 0.0f;
     HI_S32 s32Ret = HI_SUCCESS;
     SAMPLE_SVP_NNIE_CFG_S   stNnieCfg = {0};
     SAMPLE_SVP_NNIE_INPUT_DATA_INDEX_S stInputDataIdx = {0};
     SAMPLE_SVP_NNIE_PROCESS_SEG_INDEX_S stProcSegIdx = {0};
-    SAMPLE_SVP_NIE_PERF_STAT_DEF_FRM_VAR()
-    SAMPLE_SVP_NIE_PERF_STAT_DEF_VAR()
-
-    /*Clear up*/
-    system("rm ./seg* -rvf");
 
     /*Set configuration parameter*/
-    f32PrintResultThresh = 0.25f;
+    f32PrintResultThresh = 0.8f;
     stNnieCfg.pszPic= pcSrcFile;
     stNnieCfg.u32MaxInputNum = u32PicNum; //max input image num in each batch
     stNnieCfg.u32MaxRoiNum = 0;
-    stNnieCfg.aenNnieCoreId[0] = SVP_NNIE_ID_0;
+    stNnieCfg.aenNnieCoreId[0] = SVP_NNIE_ID_0;//set NNIE core
 
     /*Sys init*/
     SAMPLE_COMM_SVP_CheckSysInit();
@@ -3475,57 +3482,42 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     /*Acfree Load model*/
     SAMPLE_SVP_TRACE_INFO("Acfree Load model!\n");
     s32Ret = SAMPLE_COMM_SVP_NNIE_LoadModel(pcModelName,&s_stAcfreeModel);
-    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_COMM_SVP_NNIE_LoadModel failed!\n");
 
     /*Acfree parameter initialization*/
     SAMPLE_SVP_TRACE_INFO("Acfree parameter initialization!\n");
     s_stAcfreeNnieParam.pstModel = &s_stAcfreeModel.stModel;
     s32Ret = SAMPLE_SVP_NNIE_Acfree_ParamInit(&stNnieCfg,&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
-    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_SVP_NNIE_Acfree_ParamInit failed!\n");
 
     /*Fill src data*/
     SAMPLE_SVP_TRACE_INFO("Acfree start!\n");
-    SAMPLE_SVP_NNIE_PERF_STAT_BEGIN_LOOP()
     stInputDataIdx.u32SegIdx = 0;
     stInputDataIdx.u32NodeIdx = 0;
     s32Ret = SAMPLE_SVP_NNIE_FillSrcData(&stNnieCfg,&s_stAcfreeNnieParam,&stInputDataIdx);
-    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_SVP_NNIE_FillSrcData failed!\n");
 
     /*NNIE process(process the 0-th segment)*/
     stProcSegIdx.u32SegIdx = 0;
     s32Ret = SAMPLE_SVP_NNIE_Forward(&s_stAcfreeNnieParam,&stInputDataIdx,&stProcSegIdx,HI_TRUE);
-    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_SVP_NNIE_Forward failed!\n");
-    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_SRC_FLUSH_TIME()
-    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_PRE_DST_FLUSH_TIME()
-    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_AFTER_DST_FLUSH_TIME()
-    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_FORWARD_OP_TIME()
 
     /*Software process*/
-    SAMPLE_SVP_NNIE_PERF_STAT_BEGIN()
     s32Ret = SAMPLE_SVP_NNIE_Acfree_GetResult(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam);
-    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,Acfree_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+    SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
         "Error,SAMPLE_SVP_NNIE_Acfree_GetResult failed!\n");
-    SAMPLE_SVP_NNIE_PERF_STAT_END()
-    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME()
 
-    /*Print*/
-     SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
+     /*print result, this sample has 1 classes*/
+    SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
     (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
         &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
 
-    SAMPLE_SVP_NNIE_PERF_STAT_END_LOOP()
 
-    SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
-
-    /*Print report result*/
-    s32Ret = SAMPLE_SVP_NNIE_PrintReportResult(&s_stAcfreeNnieParam);
-
-/*Deinit*/
-Acfree_FAIL_0:
+ACFREE_FAIL_0:
     SAMPLE_SVP_NNIE_Acfree_Deinit(&s_stAcfreeNnieParam,&s_stAcfreeSoftwareParam,&s_stAcfreeModel);
     SAMPLE_COMM_SVP_CheckSysExit();
 }
