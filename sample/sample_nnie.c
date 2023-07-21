@@ -743,6 +743,9 @@ static HI_S32 SAMPLE_SVP_NNIE_PrintReportResult(SAMPLE_SVP_NNIE_PARAM_S *pstNnie
                         {
                             for(k = 0; k < u32Width; k++)
                             {
+                                // HI_FLOAT tmp = 0.0;
+                                // tmp = (HI_FLOAT)(*(ps32ResultAddr+k))/SAMPLE_SVP_NNIE_QUANT_BASE;
+                                // s32Ret = fprintf(fp,"%f\n",tmp);
                                 s32Ret = fprintf(fp,"%08x\n",*(ps32ResultAddr+k));
                                 SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,PRINT_FAIL,
                                     SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
@@ -3246,7 +3249,7 @@ INIT_FAIL_0:
 
 
 /******************************************************************************
-* function : show Acfree sample(image 416x416 U8_C3)
+* function : show Acfree sample(image U8_C3)
 ******************************************************************************/
 void SAMPLE_SVP_NNIE_Acfree(void)
 {
@@ -3260,6 +3263,9 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_NNIE_PROCESS_SEG_INDEX_S stProcSegIdx = {0};
     SAMPLE_SVP_NIE_PERF_STAT_DEF_FRM_VAR()
     SAMPLE_SVP_NIE_PERF_STAT_DEF_VAR()
+
+    /*Clear up*/
+    system("rm ./seg* -rvf");
 
     /*Set configuration parameter*/
     f32PrintResultThresh = 0.25f;
@@ -3319,6 +3325,11 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_NNIE_PERF_STAT_END_LOOP()
 
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
+
+    /*Print report result*/
+    s32Ret = SAMPLE_SVP_NNIE_PrintReportResult(&s_stAcfreeNnieParam);
+
+    system("chmod 777  ./ -R");
 
 /*Deinit*/
 Acfree_FAIL_0:
