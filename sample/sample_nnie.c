@@ -3461,7 +3461,7 @@ INIT_FAIL_0:
 void SAMPLE_SVP_NNIE_Acfree(void)
 {
     HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/dog_bike_car_416x416.bgr";
-    HI_CHAR *pcModelName = "./data/nnie_model/detection/inst_yolov3_inst.wk";
+    HI_CHAR *pcModelName = "./data/nnie_model/detection/inst_yolov3_inst_perm.wk";
     HI_U32 u32PicNum = 1;
     HI_FLOAT f32PrintResultThresh = 0.0f;
     HI_S32 s32Ret = HI_SUCCESS;
