@@ -3521,14 +3521,14 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_NNIE_PERF_STAT_END()
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_GR_OP_TIME()
 
-     /*print result, this sample has 1 classes*/
-    SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
-    (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
-        &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
-
     SAMPLE_SVP_NNIE_PERF_STAT_END_LOOP()
 
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
+
+    /*print result, this sample has 1 classes*/
+    SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
+    (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
+        &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
 
 
 ACFREE_FAIL_0:
