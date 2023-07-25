@@ -2949,7 +2949,7 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
     HI_FLOAT f32ObjScore;
     HI_U32 u32MaxValueIndex = 0;
     HI_FLOAT f32MaxScore;
-    HI_S32 s32ClassScore;
+    HI_S32 s32ClassScore = 0;
     HI_U32 u32ClassRoiNum;
     HI_U32 i = 0, j = 0, k = 0, c = 0, h = 0, w = 0;
     HI_U32 u32BlobSize = 0;
@@ -3012,18 +3012,6 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                     f32ObjScore = af32ClsScores[0];
                     f32MaxScore = SVP_NNIE_GetMaxVal(af32ClsScores + 1, u32ClassNum, &u32MaxValueIndex);
                     s32ClassScore = (HI_S32)(f32MaxScore * f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
-
-                    static HI_U32 cnt = 0;
-                    if (cnt == 100)
-                    {
-                        printf("f32StartX -> %f\n", f32StartX);
-                        printf("f32StartY -> %f\n", f32StartY);
-                        printf("f32Width -> %f\n", f32Width);
-                        printf("f32Height -> %f\n", f32Height);
-                        printf("f32MaxScore -> %f\n", f32MaxScore);
-                        printf("s32ClassScore -> %d\n", s32ClassScore);
-                    }
-                    cnt++;
 
                     //filter low score roi
                     if (s32ClassScore > u32ConfThresh)

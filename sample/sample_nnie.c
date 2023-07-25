@@ -1125,6 +1125,73 @@ static HI_S32 SAMPLE_SVP_NNIE_Detection_PrintResult(SVP_BLOB_S *pstDstScore,
 
 
 /******************************************************************************
+* function : save detection result for ruyi studio
+******************************************************************************/
+static HI_S32 SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(SVP_BLOB_S *pstDstScore,
+    SVP_BLOB_S *pstDstRoi, SVP_BLOB_S *pstClassRoiNum, HI_FLOAT f32PrintResultThresh)
+{
+    FILE* fp = NULL;
+    HI_S32 s32Ret = HI_SUCCESS;
+    HI_U32 i = 0, j = 0;
+    HI_U32 u32RoiNumBias = 0;
+    HI_U32 u32ScoreBias = 0;
+    HI_U32 u32BboxBias = 0;
+    HI_FLOAT f32Score = 0.0f;
+    HI_S32* ps32Score = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstDstScore->u64VirAddr);
+    HI_S32* ps32Roi = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstDstRoi->u64VirAddr);
+    HI_S32* ps32ClassRoiNum = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstClassRoiNum->u64VirAddr);
+    HI_U32 u32ClassNum = pstClassRoiNum->unShape.stWhc.u32Width;
+    HI_S32 s32XMin = 0,s32YMin= 0,s32XMax = 0,s32YMax = 0;
+    HI_U32 u32InputBlobWidth = 416, u32InputBlobHeight = 416;
+    HI_CHAR *pcImageName = "dog_bike_car_416x416";
+    HI_CHAR *pcSaveFileName = "./results_ruyi.txt";
+
+    fp = fopen(pcSaveFileName,"w");
+    SAMPLE_SVP_CHECK_EXPR_RET(NULL == fp,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error, open file failed!\n");
+
+    s32Ret = fprintf(fp ,"%d %d\n", u32InputBlobWidth, u32InputBlobHeight);
+    SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,SAVE_FAIL,
+        SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+
+    u32RoiNumBias += ps32ClassRoiNum[0];
+    for (i = 1; i < u32ClassNum; i++)
+    {
+        u32ScoreBias = u32RoiNumBias;
+        u32BboxBias = u32RoiNumBias * SAMPLE_SVP_NNIE_COORDI_NUM;
+        /*if the confidence score greater than result threshold, the result will be printed*/
+        if((HI_FLOAT)ps32Score[u32ScoreBias] / SAMPLE_SVP_NNIE_QUANT_BASE >=
+            f32PrintResultThresh && ps32ClassRoiNum[i]!=0)
+        {
+            SAMPLE_SVP_TRACE_INFO("==== The %dth class box info====\n", i);
+        }
+        for (j = 0; j < (HI_U32)ps32ClassRoiNum[i]; j++)
+        {
+            f32Score = (HI_FLOAT)ps32Score[u32ScoreBias + j] / SAMPLE_SVP_NNIE_QUANT_BASE;
+            if (f32Score < f32PrintResultThresh)
+            {
+                break;
+            }
+            s32XMin = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM];
+            s32YMin = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 1];
+            s32XMax = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 2];
+            s32YMax = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 3];
+            SAMPLE_SVP_TRACE_INFO("%d %d %d %d %f\n", s32XMin, s32YMin, s32XMax, s32YMax, f32Score);
+            s32Ret = fprintf(fp ,"%s %d %f %d %d %d %d \n", pcImageName, i, f32Score, s32XMin, s32YMin, s32XMax, s32YMax);
+            SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,SAVE_FAIL,
+                SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+        }
+        u32RoiNumBias += ps32ClassRoiNum[i];
+    }
+    return HI_SUCCESS;
+
+SAVE_FAIL:
+    fclose(fp);
+    return HI_FAILURE;
+}
+
+
+/******************************************************************************
 * function : FasterRcnn software deinit
 ******************************************************************************/
 static HI_S32 SAMPLE_SVP_NNIE_FasterRcnn_SoftwareDeinit(SAMPLE_SVP_NNIE_FASTERRCNN_SOFTWARE_PARAM_S* pstSoftWareParam)
@@ -3292,7 +3359,7 @@ static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
     pstSoftWareParam->au32GridNumWidth[2] = 52;
     pstSoftWareParam->u32NmsThresh = (HI_U32)(0.3f*SAMPLE_SVP_NNIE_QUANT_BASE);
     pstSoftWareParam->u32ConfThresh = (HI_U32)(0.5f*SAMPLE_SVP_NNIE_QUANT_BASE);
-    pstSoftWareParam->u32MaxRoiNum = 10;
+    pstSoftWareParam->u32MaxRoiNum = 100;
     pstSoftWareParam->af32Bias[0][0] = 116;
     pstSoftWareParam->af32Bias[0][1] = 90;
     pstSoftWareParam->af32Bias[0][2] = 156;
@@ -3525,9 +3592,8 @@ void SAMPLE_SVP_NNIE_Acfree(void)
 
     SAMPLE_SVP_NNIE_PERF_STAT_ACFREE_PRINT()
 
-    /*print result, this sample has 1 classes*/
-    SAMPLE_SVP_TRACE_INFO("Acfree result:\n");
-    (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stAcfreeSoftwareParam.stDstScore,
+    SAMPLE_SVP_TRACE_INFO("Print and Save Acfree result:\n");
+    (void)SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(&s_stAcfreeSoftwareParam.stDstScore,
         &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
 
 
@@ -3617,6 +3683,10 @@ void SAMPLE_SVP_NNIE_Yolov3(void)
       class 76:vase           class 77:scissors    class 78:teddy bear     class 79:hair drier    class 80:toothbrush*/
     SAMPLE_SVP_TRACE_INFO("Yolov3 result:\n");
     (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stYolov3SoftwareParam.stDstScore,
+        &s_stYolov3SoftwareParam.stDstRoi, &s_stYolov3SoftwareParam.stClassRoiNum,f32PrintResultThresh);
+
+    SAMPLE_SVP_TRACE_INFO("Save Yolov3 result:\n");
+    (void)SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(&s_stYolov3SoftwareParam.stDstScore,
         &s_stYolov3SoftwareParam.stDstRoi, &s_stYolov3SoftwareParam.stClassRoiNum,f32PrintResultThresh);
 
 

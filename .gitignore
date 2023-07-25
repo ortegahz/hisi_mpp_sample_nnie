@@ -7,3 +7,5 @@ sample/sample_nnie\.o
 *.o
 
 sample_nnie_main
+
+results_ruyi\.txt
