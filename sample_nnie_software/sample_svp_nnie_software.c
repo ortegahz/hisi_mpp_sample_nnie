@@ -3059,15 +3059,25 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
         }
     }
 
-    // //quick sort
-    // (void)SVP_NNIE_Yolo_NonRecursiveArgQuickSort((HI_S32*)pstBbox, 0, u32BboxNum - 1,
-    //     sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32),4,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
+    // for (i = 0; i < u32BboxNum; i++)
+    // {
+    //     printf("pstBbox[%d].s32ClsScore before sort -> %d\n", i, pstBbox[i].s32ClsScore);
+    // }
 
-    // //Acfree and Yolov2 have the same Nms operation
-    // (void)SVP_NNIE_Yolov2_NonMaxSuppression(pstBbox, u32BboxNum, u32NmsThresh, sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32));
+    //quick sort
+    (void)SVP_NNIE_Yolo_NonRecursiveArgQuickSort((HI_S32*)pstBbox, 0, u32BboxNum - 1,
+        sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32),4,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
+
+    // for (i = 0; i < u32BboxNum; i++)
+    // {
+    //     printf("pstBbox[%d].s32ClsScore after sort -> %d\n", i, pstBbox[i].s32ClsScore);
+    // }
+
+    // nms
+    (void)SVP_NNIE_Acfree_NonMaxSuppression(pstBbox, u32BboxNum, u32NmsThresh, u32MaxRoiNum);
 
     //Get result
-    printf("u32BboxNum after nms -> %d\n", u32BboxNum);
+    // printf("u32BboxNum after nms -> %d\n", u32BboxNum);
     // printf("u32ClassNum -> %d\n", u32ClassNum);
     for (i = 1; i <= u32ClassNum; i++)
     {
@@ -3084,7 +3094,7 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 u32ClassRoiNum++;
             }
         }
-        // printf("u32ClassRoiNum -> %d\n", u32ClassRoiNum);
+        printf("u32ClassRoiNum -> %d\n", u32ClassRoiNum);
         *(ps32ClassRoiNum+i) = u32ClassRoiNum;
     }
     fclose(fp);
