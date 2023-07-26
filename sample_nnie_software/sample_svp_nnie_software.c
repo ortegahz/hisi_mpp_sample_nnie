@@ -2933,7 +2933,7 @@ static HI_S32 SVP_NNIE_Yolov2_GetResult(HI_S32 *ps32InputData,HI_U32 u32GridNumW
 *****************************************************************************/
 static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridNumWidth[],
     HI_U32 au32GridNumHeight[],HI_U32 au32Stride[],HI_U32 u32EachGridBbox,HI_U32 u32ClassNum,HI_U32 u32SrcWidth,
-    HI_U32 u32SrcHeight,HI_U32 u32MaxRoiNum,HI_U32 u32NmsThresh,HI_U32 u32ConfThresh,
+    HI_U32 u32SrcHeight,HI_U32 u32MaxRoiNum,HI_U32 u32NmsThresh,HI_U32 u32ConfThresh, HI_S32 s32ConfThresh,
     HI_FLOAT af32Bias[SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM][SAMPLE_SVP_NNIE_ACFREE_EACH_GRID_BIAS_NUM],
     HI_S32* ps32TmpBuf,HI_S32 *ps32DstScore, HI_S32 *ps32DstRoi, HI_S32 *ps32ClassRoiNum)
 {
@@ -3020,17 +3020,6 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 u32MaxValueIndex = 0;
                 u32Offset = h * u32HeightOffset + w * u32WidthOffset;
 
-                //calculate score
-                // //calculate score
-                // (void)SVP_NNIE_Sigmoid(&pf32Permute[u32Offset + 4], (u32ClassNum+1));
-                // f32ObjScore = pf32Permute[u32Offset + 4];
-                // f32MaxScore = SVP_NNIE_GetMaxVal(&pf32Permute[u32Offset + 5], u32ClassNum, &u32MaxValueIndex);
-                // s32ClassScore = (HI_S32)(f32MaxScore * f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
-
-                f32ObjScore = (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                f32ObjScore = SAMPLE_SVP_NNIE_SIGMOID(f32ObjScore);
-                s32ClassScore = (HI_S32)(f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
-
                 // if (i == 0)
                 // {
                 //     // s32Ret = fprintf(fp ,"%f \n", f32ObjScore);
@@ -3043,7 +3032,11 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE);
                 // }
 
-                if (s32ClassScore < u32ConfThresh) continue;
+                if (ps32InputBlob[u32Offset + 4] < s32ConfThresh) continue;
+
+                f32ObjScore = (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                f32ObjScore = SAMPLE_SVP_NNIE_SIGMOID(f32ObjScore);
+                s32ClassScore = (HI_S32)(f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
 
                 // printf("s32ClassScore -> %d\n", s32ClassScore);
                 // printf("f32ObjScore -> %f\n", f32ObjScore);
@@ -4155,7 +4148,7 @@ HI_S32 SAMPLE_SVP_NNIE_Acfree_GetResult(SAMPLE_SVP_NNIE_PARAM_S*pstNnieParam,
         pstSoftwareParam->au32GridNumHeight,au32Stride,pstSoftwareParam->u32BboxNumEachGrid,
         pstSoftwareParam->u32ClassNum,pstSoftwareParam->u32OriImWidth,
         pstSoftwareParam->u32OriImWidth,pstSoftwareParam->u32MaxRoiNum,pstSoftwareParam->u32NmsThresh,
-        pstSoftwareParam->u32ConfThresh,pstSoftwareParam->af32Bias,
+        pstSoftwareParam->u32ConfThresh,pstSoftwareParam->s32ConfThresh,pstSoftwareParam->af32Bias,
         (HI_S32*)pstSoftwareParam->stGetResultTmpBuf.u64VirAddr,
         (HI_S32*)pstSoftwareParam->stDstScore.u64VirAddr,
         (HI_S32*)pstSoftwareParam->stDstRoi.u64VirAddr,

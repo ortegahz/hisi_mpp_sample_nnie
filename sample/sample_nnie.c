@@ -3537,7 +3537,8 @@ static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
     pstSoftWareParam->au32GridNumWidth[2] = 20;
     pstSoftWareParam->u32NmsThresh = (HI_U32)(0.3f*SAMPLE_SVP_NNIE_QUANT_BASE);
     pstSoftWareParam->u32ConfThresh = (HI_U32)(0.5f*SAMPLE_SVP_NNIE_QUANT_BASE);
-    pstSoftWareParam->u32MaxRoiNum = 10000;
+    pstSoftWareParam->s32ConfThresh = (HI_S32)(SAMPLE_SVP_NNIE_UNSIGMOID(0.5f)*SAMPLE_SVP_NNIE_QUANT_BASE);
+    pstSoftWareParam->u32MaxRoiNum = 1000;
     pstSoftWareParam->af32Bias[0][0] = 116;
     pstSoftWareParam->af32Bias[0][1] = 90;
     pstSoftWareParam->af32Bias[0][2] = 156;

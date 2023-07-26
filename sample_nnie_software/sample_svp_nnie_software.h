@@ -24,6 +24,7 @@ extern "C" {
 #define SAMPLE_SVP_NNIE_MAX(a,b)    (((a) > (b)) ? (a) : (b))
 #define SAMPLE_SVP_NNIE_MIN(a,b)    (((a) < (b)) ? (a) : (b))
 #define SAMPLE_SVP_NNIE_SIGMOID(x)   (HI_FLOAT)(1.0f/(1+exp(-x)))
+#define SAMPLE_SVP_NNIE_UNSIGMOID(y)   (HI_FLOAT)(-1.0 * log((1.0 / y) - 1.0))
 
 #define SAMPLE_SVP_NNIE_KERNEL_LOCAL_SIZE (1024)
 #define SAMPLE_SVP_NNIE_COORDI_NUM  4      /*coordinate numbers*/
