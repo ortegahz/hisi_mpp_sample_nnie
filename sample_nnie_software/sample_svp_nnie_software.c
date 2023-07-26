@@ -3046,7 +3046,7 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 if (s32ClassScore < u32ConfThresh) continue;
 
                 // printf("s32ClassScore -> %d\n", s32ClassScore);
-                printf("f32ObjScore -> %f\n", f32ObjScore);
+                // printf("f32ObjScore -> %f\n", f32ObjScore);
 
                 //decode bbox
                 f32OffsetLeft = (HI_FLOAT)(ps32InputBlob[u32Offset + 0]) / SAMPLE_SVP_NNIE_QUANT_BASE;
@@ -3075,7 +3075,7 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
 
     //Get result
     printf("u32BboxNum after nms -> %d\n", u32BboxNum);
-    printf("u32ClassNum -> %d\n", u32ClassNum);
+    // printf("u32ClassNum -> %d\n", u32ClassNum);
     for (i = 1; i <= u32ClassNum; i++)
     {
         u32ClassRoiNum = 0;
@@ -3091,7 +3091,7 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 u32ClassRoiNum++;
             }
         }
-        printf("u32ClassRoiNum -> %d\n", u32ClassRoiNum);
+        // printf("u32ClassRoiNum -> %d\n", u32ClassRoiNum);
         *(ps32ClassRoiNum+i) = u32ClassRoiNum;
     }
     fclose(fp);

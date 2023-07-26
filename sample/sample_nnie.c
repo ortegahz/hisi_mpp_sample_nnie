@@ -1340,20 +1340,20 @@ static HI_S32 SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(SVP_BLOB_S *pstDstScore,
         u32ScoreBias = u32RoiNumBias;
         u32BboxBias = u32RoiNumBias * SAMPLE_SVP_NNIE_COORDI_NUM;
         /*if the confidence score greater than result threshold, the result will be printed*/
-        if(ps32ClassRoiNum[i]!=0)
-        {
-            SAMPLE_SVP_TRACE_INFO("==== The %dth class box info====\n", i);
-        }
+        // if(ps32ClassRoiNum[i]!=0)
+        // {
+        //     SAMPLE_SVP_TRACE_INFO("==== The %dth class box info====\n", i);
+        // }
         printf("(HI_U32)ps32ClassRoiNum[i] -> %d\n", (HI_U32)ps32ClassRoiNum[i]);
         for (j = 0; j < (HI_U32)ps32ClassRoiNum[i]; j++)
         {
             f32Score = (HI_FLOAT)ps32Score[u32ScoreBias + j] / SAMPLE_SVP_NNIE_QUANT_BASE;
-            printf("f32Score -> %f\n", f32Score);
+            // printf("f32Score -> %f\n", f32Score);
             s32XMin = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM];
             s32YMin = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 1];
             s32XMax = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 2];
             s32YMax = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 3];
-            SAMPLE_SVP_TRACE_INFO("%d %d %d %d %f\n", s32XMin, s32YMin, s32XMax, s32YMax, f32Score);
+            // SAMPLE_SVP_TRACE_INFO("%d %d %d %d %f\n", s32XMin, s32YMin, s32XMax, s32YMax, f32Score);
             s32Ret = fprintf(fp ,"%s %d %f %d %d %d %d \n", pcImageName, i, f32Score, s32XMin, s32YMin, s32XMax, s32YMax);
             SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,SAVE_FAIL,
                 SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");

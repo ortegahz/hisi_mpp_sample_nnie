@@ -5,8 +5,8 @@ include $(PWD)/../Makefile.param
 
 CFLAGS += -I$(PWD)/sample
 CFLAGS += -I$(PWD)/sample_nnie_software
-# CFLAGS += -O3
-CFLAGS += -O0 -g
+CFLAGS += -O3
+# CFLAGS += -O0 -g
 
 SMP_SRCS := $(wildcard *.c)
 SMP_SRCS += $(wildcard ./sample/*.c)
