@@ -2653,6 +2653,10 @@ static HI_S32 SVP_NNIE_Yolov3_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
 
     for(i = 0; i < SAMPLE_SVP_NNIE_YOLOV3_REPORT_BLOB_NUM; i++)
     {
+        printf("au32Stride[i] -> %d\n", au32Stride[i]);
+        printf("au32GridNumHeight[i] -> %d\n", au32GridNumHeight[i]);
+        printf("au32GridNumWidth[i] -> %d\n", au32GridNumWidth[i]);
+
         //permute
         u32Offset = 0;
         ps32InputBlob = pps32InputData[i];
@@ -2705,6 +2709,7 @@ static HI_S32 SVP_NNIE_Yolov3_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 //filter low score roi
                 if (s32ClassScore > u32ConfThresh)
                 {
+                    printf("f32ObjScore -> %f\n", f32ObjScore);
                     pstBbox[u32BboxNum].f32Xmin= (HI_FLOAT)(f32StartX - f32Width * 0.5f);
                     pstBbox[u32BboxNum].f32Ymin= (HI_FLOAT)(f32StartY - f32Height * 0.5f);
                     pstBbox[u32BboxNum].f32Xmax= (HI_FLOAT)(f32StartX + f32Width * 0.5f);
@@ -2718,6 +2723,8 @@ static HI_S32 SVP_NNIE_Yolov3_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
         }
     }
 
+    printf("u32BboxNum before nms -> %d\n", u32BboxNum);
+
     //quick sort
     (void)SVP_NNIE_Yolo_NonRecursiveArgQuickSort((HI_S32*)pstBbox, 0, u32BboxNum - 1,
         sizeof(SAMPLE_SVP_NNIE_YOLOV3_BBOX_S)/sizeof(HI_U32),4,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
@@ -2726,6 +2733,7 @@ static HI_S32 SVP_NNIE_Yolov3_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
     (void)SVP_NNIE_Yolov2_NonMaxSuppression(pstBbox, u32BboxNum, u32NmsThresh, sizeof(SAMPLE_SVP_NNIE_YOLOV3_BBOX_S)/sizeof(HI_U32));
 
     //Get result
+    printf("u32BboxNum after nms -> %d\n", u32BboxNum);
     for (i = 1; i < u32ClassNum; i++)
     {
         u32ClassRoiNum = 0;
@@ -2929,6 +2937,9 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
     HI_FLOAT af32Bias[SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM][SAMPLE_SVP_NNIE_ACFREE_EACH_GRID_BIAS_NUM],
     HI_S32* ps32TmpBuf,HI_S32 *ps32DstScore, HI_S32 *ps32DstRoi, HI_S32 *ps32ClassRoiNum)
 {
+    FILE* fp = NULL;
+    HI_CHAR *pcSaveFileName = "./results_ruyi_debug.txt";
+    HI_S32 s32Ret = HI_SUCCESS;
     HI_S32 *ps32InputBlob = NULL;
     HI_FLOAT *pf32Permute = NULL;
     SAMPLE_SVP_NNIE_ACFREE_BBOX_S *pstBbox = NULL;
@@ -2944,6 +2955,12 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
     HI_U32 u32Offset;
     HI_FLOAT f32StartX;
     HI_FLOAT f32StartY;
+    HI_FLOAT f32OffsetLeft;
+    HI_FLOAT f32OffsetTop;
+    HI_FLOAT f32OffsetRight;
+    HI_FLOAT f32OffsetBottom;
+    HI_FLOAT f32StrideWidth;
+    HI_FLOAT f32StrideHeight;
     HI_FLOAT f32Width;
     HI_FLOAT f32Height;
     HI_FLOAT f32ObjScore;
@@ -2975,88 +2992,114 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
     pstBbox = (SAMPLE_SVP_NNIE_ACFREE_BBOX_S*)(pf32Permute+u32MaxBlobSize/sizeof(HI_S32));
     ps32AssistBuf = (HI_S32*)(pstBbox+u32TotalBboxNum);
 
+    fp = fopen(pcSaveFileName,"w");
+    SAMPLE_SVP_CHECK_EXPR_RET(NULL == fp,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+        "Error,open file failed!\n");
+
     for(i = 0; i < SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM; i++)
     {
+        f32StrideWidth = (HI_FLOAT) (u32SrcWidth / au32GridNumWidth[i]);
+        f32StrideHeight = (HI_FLOAT) (u32SrcHeight / au32GridNumHeight[i]);
+
+        // printf("au32Stride[i] -> %d\n", au32Stride[i]);
+        // printf("au32GridNumHeight[%d] -> %d\n", i, au32GridNumHeight[i]);
+        // printf("au32GridNumWidth[%d] -> %d\n", i, au32GridNumWidth[i]);
+        // printf("f32StrideWidth -> %f\n", f32StrideWidth);
+        // printf("f32StrideHeight -> %f\n", f32StrideHeight);
+        // printf("u32ConfThresh -> %d\n", u32ConfThresh);
+        // printf("u32EachGridBbox -> %d\n", u32EachGridBbox);
+
         u32Offset = 0;
         ps32InputBlob = pps32InputData[i];
         u32HeightOffset = au32GridNumWidth[i]*au32Stride[i]/sizeof(HI_S32);
         u32WidthOffset = au32Stride[i]/sizeof(HI_S32);
-        u32BoxOffset = au32Stride[i]/sizeof(HI_S32)/u32EachGridBbox;
         for (h = 0; h < au32GridNumHeight[i]; h++)
         {
             for (w = 0; w < au32GridNumWidth[i]; w++)
             {
-                for (k = 0; k < u32EachGridBbox; k++)
-                {
-                    u32MaxValueIndex = 0;
-                    u32Offset = h * u32HeightOffset + w * u32WidthOffset + k * u32BoxOffset;
+                u32MaxValueIndex = 0;
+                u32Offset = h * u32HeightOffset + w * u32WidthOffset;
 
-                    //decode bbox
-                    f32StartX = (HI_FLOAT)(ps32InputBlob[u32Offset + 0]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                    f32StartY = (HI_FLOAT)(ps32InputBlob[u32Offset + 1]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                    f32Width = (HI_FLOAT)(ps32InputBlob[u32Offset + 2]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                    f32Height = (HI_FLOAT)(ps32InputBlob[u32Offset + 3]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                //calculate score
+                // //calculate score
+                // (void)SVP_NNIE_Sigmoid(&pf32Permute[u32Offset + 4], (u32ClassNum+1));
+                // f32ObjScore = pf32Permute[u32Offset + 4];
+                // f32MaxScore = SVP_NNIE_GetMaxVal(&pf32Permute[u32Offset + 5], u32ClassNum, &u32MaxValueIndex);
+                // s32ClassScore = (HI_S32)(f32MaxScore * f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
 
-                    f32StartX = ((HI_FLOAT)w + SAMPLE_SVP_NNIE_SIGMOID(f32StartX)) / au32GridNumWidth[i];
-                    f32StartY = ((HI_FLOAT)h + SAMPLE_SVP_NNIE_SIGMOID(f32StartY)) / au32GridNumHeight[i];
-                    f32Width = (HI_FLOAT)(exp(f32Width) * af32Bias[i][2*k]) / u32SrcWidth;
-                    f32Height = (HI_FLOAT)(exp(f32Height) * af32Bias[i][2*k + 1]) / u32SrcHeight;
+                f32ObjScore = (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                f32ObjScore = SAMPLE_SVP_NNIE_SIGMOID(f32ObjScore);
+                s32ClassScore = (HI_S32)(f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
 
-                    //calculate score
-                    HI_FLOAT af32ClsScores[u32ClassNum+1];
-                    for (HI_U32 z = 0; z < u32ClassNum + 1; z++)
-                    {
-                        af32ClsScores[z] = (HI_FLOAT)(ps32InputBlob[u32Offset + 4 + z]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                    }
-                    (void)SVP_NNIE_Sigmoid(af32ClsScores, (u32ClassNum+1));
-                    f32ObjScore = af32ClsScores[0];
-                    f32MaxScore = SVP_NNIE_GetMaxVal(af32ClsScores + 1, u32ClassNum, &u32MaxValueIndex);
-                    s32ClassScore = (HI_S32)(f32MaxScore * f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
+                // if (i == 0)
+                // {
+                //     // s32Ret = fprintf(fp ,"%f \n", f32ObjScore);
+                //     // SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,ACFREE_GR_FAIL,
+                //     //     SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+                //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 0]) / SAMPLE_SVP_NNIE_QUANT_BASE);
+                //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 1]) / SAMPLE_SVP_NNIE_QUANT_BASE);
+                //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 2]) / SAMPLE_SVP_NNIE_QUANT_BASE);
+                //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 3]) / SAMPLE_SVP_NNIE_QUANT_BASE);
+                //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE);
+                // }
 
-                    //filter low score roi
-                    if (s32ClassScore > u32ConfThresh)
-                    {
-                        pstBbox[u32BboxNum].f32Xmin= (HI_FLOAT)(f32StartX - f32Width * 0.5f);
-                        pstBbox[u32BboxNum].f32Ymin= (HI_FLOAT)(f32StartY - f32Height * 0.5f);
-                        pstBbox[u32BboxNum].f32Xmax= (HI_FLOAT)(f32StartX + f32Width * 0.5f);
-                        pstBbox[u32BboxNum].f32Ymax= (HI_FLOAT)(f32StartY + f32Height * 0.5f);
-                        pstBbox[u32BboxNum].s32ClsScore = s32ClassScore;
-                        pstBbox[u32BboxNum].u32Mask= 0;
-                        pstBbox[u32BboxNum].u32ClassIdx = (HI_S32)(u32MaxValueIndex+1);
-                        u32BboxNum++;
-                    }
-                }
+                if (s32ClassScore < u32ConfThresh) continue;
+
+                // printf("s32ClassScore -> %d\n", s32ClassScore);
+                printf("f32ObjScore -> %f\n", f32ObjScore);
+
+                //decode bbox
+                f32OffsetLeft = (HI_FLOAT)(ps32InputBlob[u32Offset + 0]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                f32OffsetTop = (HI_FLOAT)(ps32InputBlob[u32Offset + 1]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                f32OffsetRight = (HI_FLOAT)(ps32InputBlob[u32Offset + 2]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                f32OffsetBottom = (HI_FLOAT)(ps32InputBlob[u32Offset + 3]) / SAMPLE_SVP_NNIE_QUANT_BASE;
+
+                pstBbox[u32BboxNum].f32Xmin= ((HI_FLOAT)w - f32OffsetLeft + 0.5) * f32StrideWidth;
+                pstBbox[u32BboxNum].f32Ymin= ((HI_FLOAT)h - f32OffsetTop + 0.5) * f32StrideHeight;
+                pstBbox[u32BboxNum].f32Xmax= ((HI_FLOAT)w + f32OffsetRight + 0.5) * f32StrideWidth;
+                pstBbox[u32BboxNum].f32Ymax= ((HI_FLOAT)h + f32OffsetBottom + 0.5) * f32StrideHeight;
+                pstBbox[u32BboxNum].s32ClsScore = s32ClassScore;
+                pstBbox[u32BboxNum].u32Mask= 0;
+                pstBbox[u32BboxNum].u32ClassIdx = (HI_S32)(u32MaxValueIndex+1);
+                u32BboxNum++;
             }
         }
     }
 
-    //quick sort
-    (void)SVP_NNIE_Yolo_NonRecursiveArgQuickSort((HI_S32*)pstBbox, 0, u32BboxNum - 1,
-        sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32),4,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
+    // //quick sort
+    // (void)SVP_NNIE_Yolo_NonRecursiveArgQuickSort((HI_S32*)pstBbox, 0, u32BboxNum - 1,
+    //     sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32),4,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
 
-    //Acfree and Yolov2 have the same Nms operation
-    (void)SVP_NNIE_Yolov2_NonMaxSuppression(pstBbox, u32BboxNum, u32NmsThresh, sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32));
+    // //Acfree and Yolov2 have the same Nms operation
+    // (void)SVP_NNIE_Yolov2_NonMaxSuppression(pstBbox, u32BboxNum, u32NmsThresh, sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32));
 
     //Get result
-    for (i = 1; i < u32ClassNum; i++)
+    printf("u32BboxNum after nms -> %d\n", u32BboxNum);
+    printf("u32ClassNum -> %d\n", u32ClassNum);
+    for (i = 1; i <= u32ClassNum; i++)
     {
         u32ClassRoiNum = 0;
         for(j = 0; j < u32BboxNum; j++)
         {
             if ((0 == pstBbox[j].u32Mask) && (i == pstBbox[j].u32ClassIdx) && (u32ClassRoiNum < u32MaxRoiNum))
             {
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32Xmin*u32SrcWidth), 0);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32Ymin*u32SrcHeight), 0);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(pstBbox[j].f32Xmax*u32SrcWidth), u32SrcWidth);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(pstBbox[j].f32Ymax*u32SrcHeight), u32SrcHeight);
+                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32Xmin), 0);
+                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32Ymin), 0);
+                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(pstBbox[j].f32Xmax), u32SrcWidth);
+                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(pstBbox[j].f32Ymax), u32SrcHeight);
                 *(ps32DstScore++) = pstBbox[j].s32ClsScore;
                 u32ClassRoiNum++;
             }
         }
+        printf("u32ClassRoiNum -> %d\n", u32ClassRoiNum);
         *(ps32ClassRoiNum+i) = u32ClassRoiNum;
     }
-
+    fclose(fp);
     return HI_SUCCESS;
+
+ACFREE_GR_FAIL:
+    fclose(fp);
+    return HI_FAILURE;
 }
 
 /*****************************************************************************

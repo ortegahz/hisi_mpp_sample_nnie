@@ -46,7 +46,7 @@ extern "C" {
 #define SAMPLE_SVP_NNIE_YOLOV3_EACH_BBOX_INFER_RESULT_NUM   85 /*yolov3 inference result num of each bbox*/
 #define SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM    3 /*acfree report blob num*/
 #define SAMPLE_SVP_NNIE_ACFREE_EACH_GRID_BIAS_NUM 6 /*acfree bias num of each grid*/
-#define SAMPLE_SVP_NNIE_ACFREE_EACH_BBOX_INFER_RESULT_NUM   85 /*acfree inference result num of each bbox*/
+#define SAMPLE_SVP_NNIE_ACFREE_EACH_BBOX_INFER_RESULT_NUM   5 /*acfree inference result num of each bbox*/
 
 /*CNN GetTopN unit*/
 typedef struct hiSAMPLE_SVP_NNIE_CNN_GETTOPN_UNIT_S

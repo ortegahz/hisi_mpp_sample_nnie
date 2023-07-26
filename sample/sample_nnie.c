@@ -769,6 +769,185 @@ PRINT_FAIL:
     return HI_FAILURE;
 }
 
+/******************************************************************************
+* function : print report float result
+******************************************************************************/
+static HI_S32 SAMPLE_SVP_NNIE_PrintReportResultFloat(SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam)
+{
+    HI_U32 u32SegNum = pstNnieParam->pstModel->u32NetSegNum;
+    HI_U32 i = 0, j = 0, k = 0, n = 0;
+    HI_U32 u32SegIdx = 0, u32NodeIdx = 0;
+    HI_S32 s32Ret = HI_SUCCESS;
+    HI_CHAR acReportFileName[SAMPLE_SVP_NNIE_REPORT_NAME_LENGTH] = {'\0'};
+    FILE* fp = NULL;
+    HI_U32*pu32StepAddr = NULL;
+    HI_S32*ps32ResultAddr = NULL;
+    HI_U32 u32Height = 0, u32Width = 0, u32Chn = 0, u32Stride = 0, u32Dim = 0;
+
+    for(u32SegIdx = 0; u32SegIdx < u32SegNum; u32SegIdx++)
+    {
+        for(u32NodeIdx = 0; u32NodeIdx < pstNnieParam->pstModel->astSeg[u32SegIdx].u16DstNum; u32NodeIdx++)
+        {
+            s32Ret = snprintf(acReportFileName,SAMPLE_SVP_NNIE_REPORT_NAME_LENGTH,
+                "seg%d_layer%d_output%d_inst.linear.float",u32SegIdx,
+                pstNnieParam->pstModel->astSeg[u32SegIdx].astDstNode[u32NodeIdx].u32NodeId,0);
+            SAMPLE_SVP_CHECK_EXPR_RET(s32Ret < 0,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+                "Error,create file name failed!\n");
+
+            fp = fopen(acReportFileName,"w");
+            SAMPLE_SVP_CHECK_EXPR_RET(NULL == fp,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+                "Error,open file failed!\n");
+
+            if(SVP_BLOB_TYPE_SEQ_S32 == pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].enType)
+            {
+                u32Dim = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stSeq.u32Dim;
+                u32Stride = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Stride;
+                pu32StepAddr = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_U32,pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stSeq.u64VirAddrStep);
+                ps32ResultAddr = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u64VirAddr);
+
+                for(n = 0; n < pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Num; n++)
+                {
+                    for(i = 0;i < *(pu32StepAddr+n); i++)
+                    {
+                        for(j = 0; j < u32Dim; j++)
+                        {
+                            HI_FLOAT f32ValueSave = (HI_FLOAT)(*(ps32ResultAddr+j)) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                            s32Ret = fprintf(fp ,"%f\n",f32ValueSave);
+                            SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,PRINT_FAIL,
+                                SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+                        }
+                        ps32ResultAddr += u32Stride/sizeof(HI_U32);
+                    }
+                }
+            }
+            else
+            {
+                u32Height = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stWhc.u32Height;
+                u32Width = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stWhc.u32Width;
+                u32Chn = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stWhc.u32Chn;
+                u32Stride = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Stride;
+                ps32ResultAddr = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u64VirAddr);
+                for(n = 0; n < pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Num; n++)
+                {
+                    for(i = 0;i < u32Chn; i++)
+                    {
+                        for(j = 0; j < u32Height; j++)
+                        {
+                            for(k = 0; k < u32Width; k++)
+                            {
+                                HI_FLOAT f32ValueSave = (HI_FLOAT)(*(ps32ResultAddr+k)) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                                s32Ret = fprintf(fp ,"%f\n",f32ValueSave);
+                                SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,PRINT_FAIL,
+                                    SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+                            }
+                            ps32ResultAddr += u32Stride/sizeof(HI_U32);
+                        }
+                    }
+                }
+            }
+            fclose(fp);
+        }
+    }
+    return HI_SUCCESS;
+
+PRINT_FAIL:
+    fclose(fp);
+    return HI_FAILURE;
+}
+
+
+/******************************************************************************
+* function : print report float result
+******************************************************************************/
+static HI_S32 SAMPLE_SVP_NNIE_PrintReportResultFloatPerm(SAMPLE_SVP_NNIE_PARAM_S *pstNnieParam)
+{
+    HI_U32 u32SegNum = pstNnieParam->pstModel->u32NetSegNum;
+    HI_U32 i = 0, j = 0, k = 0, n = 0;
+    HI_U32 u32SegIdx = 0, u32NodeIdx = 0;
+    HI_S32 s32Ret = HI_SUCCESS;
+    HI_CHAR acReportFileName[SAMPLE_SVP_NNIE_REPORT_NAME_LENGTH] = {'\0'};
+    FILE* fp = NULL;
+    HI_U32*pu32StepAddr = NULL;
+    HI_S32*ps32ResultAddr = NULL;
+    HI_U32 u32Height = 0, u32Width = 0, u32Chn = 0, u32Stride = 0, u32Dim = 0;
+
+    for(u32SegIdx = 0; u32SegIdx < u32SegNum; u32SegIdx++)
+    {
+        for(u32NodeIdx = 0; u32NodeIdx < pstNnieParam->pstModel->astSeg[u32SegIdx].u16DstNum; u32NodeIdx++)
+        {
+            s32Ret = snprintf(acReportFileName,SAMPLE_SVP_NNIE_REPORT_NAME_LENGTH,
+                "seg%d_layer%d_output%d_inst.linear.float",u32SegIdx,
+                pstNnieParam->pstModel->astSeg[u32SegIdx].astDstNode[u32NodeIdx].u32NodeId,0);
+            SAMPLE_SVP_CHECK_EXPR_RET(s32Ret < 0,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+                "Error,create file name failed!\n");
+
+            fp = fopen(acReportFileName,"w");
+            SAMPLE_SVP_CHECK_EXPR_RET(NULL == fp,HI_INVALID_VALUE,SAMPLE_SVP_ERR_LEVEL_ERROR,
+                "Error,open file failed!\n");
+
+            if(SVP_BLOB_TYPE_SEQ_S32 == pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].enType)
+            {
+                u32Dim = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stSeq.u32Dim;
+                u32Stride = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Stride;
+                pu32StepAddr = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_U32,pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stSeq.u64VirAddrStep);
+                ps32ResultAddr = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u64VirAddr);
+
+                for(n = 0; n < pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Num; n++)
+                {
+                    for(i = 0;i < *(pu32StepAddr+n); i++)
+                    {
+                        for(j = 0; j < u32Dim; j++)
+                        {
+                            // TODO:
+                            HI_FLOAT f32ValueSave = (HI_FLOAT)(*(ps32ResultAddr+j)) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                            s32Ret = fprintf(fp ,"%f\n",f32ValueSave);
+                            SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,PRINT_FAIL,
+                                SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+                        }
+                        ps32ResultAddr += u32Stride/sizeof(HI_U32);
+                    }
+                }
+            }
+            else
+            {
+                u32Height = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stWhc.u32Height;
+                u32Width = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stWhc.u32Width;
+                u32Chn = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].unShape.stWhc.u32Chn;
+                u32Stride = pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Stride;
+                ps32ResultAddr = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u64VirAddr);
+
+                printf("H -> %d\n", u32Chn);
+                printf("W -> %d\n", u32Height);
+                printf("C / S -> %d / %d\n", u32Width, u32Stride);
+
+                for(n = 0; n < pstNnieParam->astSegData[u32SegIdx].astDst[u32NodeIdx].u32Num; n++)
+                {
+                    for(i = 0;i < u32Chn; i++)
+                    {
+                        for(j = 0; j < u32Height; j++)
+                        {
+                            for(k = 0; k < u32Width; k++)
+                            {
+                                HI_FLOAT f32ValueSave = (HI_FLOAT)(*(ps32ResultAddr+k)) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                                s32Ret = fprintf(fp ,"%f\n",f32ValueSave);
+                                SAMPLE_SVP_CHECK_EXPR_GOTO(s32Ret < 0,PRINT_FAIL,
+                                    SAMPLE_SVP_ERR_LEVEL_ERROR,"Error,write report result file failed!\n");
+                            }
+                            ps32ResultAddr += u32Stride/sizeof(HI_U32);
+                        }
+                    }
+                }
+            }
+            fclose(fp);
+        }
+    }
+    return HI_SUCCESS;
+
+PRINT_FAIL:
+    fclose(fp);
+    return HI_FAILURE;
+}
+
 
 /******************************************************************************
 * function : Cnn software deinit
@@ -1142,8 +1321,9 @@ static HI_S32 SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(SVP_BLOB_S *pstDstScore,
     HI_S32* ps32ClassRoiNum = SAMPLE_SVP_NNIE_CONVERT_64BIT_ADDR(HI_S32,pstClassRoiNum->u64VirAddr);
     HI_U32 u32ClassNum = pstClassRoiNum->unShape.stWhc.u32Width;
     HI_S32 s32XMin = 0,s32YMin= 0,s32XMax = 0,s32YMax = 0;
-    HI_U32 u32InputBlobWidth = 416, u32InputBlobHeight = 416;
-    HI_CHAR *pcImageName = "dog_bike_car_416x416";
+    // TODO: automatic
+    HI_U32 u32InputBlobWidth = 640, u32InputBlobHeight = 640; 
+    HI_CHAR *pcImageName = "students_lt";
     HI_CHAR *pcSaveFileName = "./results_ruyi.txt";
 
     fp = fopen(pcSaveFileName,"w");
@@ -1160,18 +1340,15 @@ static HI_S32 SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(SVP_BLOB_S *pstDstScore,
         u32ScoreBias = u32RoiNumBias;
         u32BboxBias = u32RoiNumBias * SAMPLE_SVP_NNIE_COORDI_NUM;
         /*if the confidence score greater than result threshold, the result will be printed*/
-        if((HI_FLOAT)ps32Score[u32ScoreBias] / SAMPLE_SVP_NNIE_QUANT_BASE >=
-            f32PrintResultThresh && ps32ClassRoiNum[i]!=0)
+        if(ps32ClassRoiNum[i]!=0)
         {
             SAMPLE_SVP_TRACE_INFO("==== The %dth class box info====\n", i);
         }
+        printf("(HI_U32)ps32ClassRoiNum[i] -> %d\n", (HI_U32)ps32ClassRoiNum[i]);
         for (j = 0; j < (HI_U32)ps32ClassRoiNum[i]; j++)
         {
             f32Score = (HI_FLOAT)ps32Score[u32ScoreBias + j] / SAMPLE_SVP_NNIE_QUANT_BASE;
-            if (f32Score < f32PrintResultThresh)
-            {
-                break;
-            }
+            printf("f32Score -> %f\n", f32Score);
             s32XMin = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM];
             s32YMin = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 1];
             s32XMax = ps32Roi[u32BboxBias + j*SAMPLE_SVP_NNIE_COORDI_NUM + 2];
@@ -1183,6 +1360,7 @@ static HI_S32 SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(SVP_BLOB_S *pstDstScore,
         }
         u32RoiNumBias += ps32ClassRoiNum[i];
     }
+    fclose(fp);
     return HI_SUCCESS;
 
 SAVE_FAIL:
@@ -3349,17 +3527,17 @@ static HI_S32 SAMPLE_SVP_NNIE_Acfree_SoftwareInit(SAMPLE_SVP_NNIE_CFG_S* pstCfg,
 
     pstSoftWareParam->u32OriImHeight = pstNnieParam->astSegData[0].astSrc[0].unShape.stWhc.u32Height;
     pstSoftWareParam->u32OriImWidth = pstNnieParam->astSegData[0].astSrc[0].unShape.stWhc.u32Width;
-    pstSoftWareParam->u32BboxNumEachGrid = 3;
-    pstSoftWareParam->u32ClassNum = 80;
-    pstSoftWareParam->au32GridNumHeight[0] = 13;
-    pstSoftWareParam->au32GridNumHeight[1] = 26;
-    pstSoftWareParam->au32GridNumHeight[2] = 52;
-    pstSoftWareParam->au32GridNumWidth[0] = 13;
-    pstSoftWareParam->au32GridNumWidth[1] = 26;
-    pstSoftWareParam->au32GridNumWidth[2] = 52;
+    pstSoftWareParam->u32BboxNumEachGrid = 1;
+    pstSoftWareParam->u32ClassNum = 1;
+    pstSoftWareParam->au32GridNumHeight[0] = 80;
+    pstSoftWareParam->au32GridNumHeight[1] = 40;
+    pstSoftWareParam->au32GridNumHeight[2] = 20;
+    pstSoftWareParam->au32GridNumWidth[0] = 80;
+    pstSoftWareParam->au32GridNumWidth[1] = 40;
+    pstSoftWareParam->au32GridNumWidth[2] = 20;
     pstSoftWareParam->u32NmsThresh = (HI_U32)(0.3f*SAMPLE_SVP_NNIE_QUANT_BASE);
     pstSoftWareParam->u32ConfThresh = (HI_U32)(0.5f*SAMPLE_SVP_NNIE_QUANT_BASE);
-    pstSoftWareParam->u32MaxRoiNum = 100;
+    pstSoftWareParam->u32MaxRoiNum = 10000;
     pstSoftWareParam->af32Bias[0][0] = 116;
     pstSoftWareParam->af32Bias[0][1] = 90;
     pstSoftWareParam->af32Bias[0][2] = 156;
@@ -3527,8 +3705,8 @@ INIT_FAIL_0:
 ******************************************************************************/
 void SAMPLE_SVP_NNIE_Acfree(void)
 {
-    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/dog_bike_car_416x416.bgr";
-    HI_CHAR *pcModelName = "./data/nnie_model/detection/inst_yolov3_inst_perm.wk";
+    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/students_lt_640x640.bgr";
+    HI_CHAR *pcModelName = "./data/nnie_model/detection/acfree.wk";
     HI_U32 u32PicNum = 1;
     HI_FLOAT f32PrintResultThresh = 0.0f;
     HI_S32 s32Ret = HI_SUCCESS;
@@ -3595,6 +3773,10 @@ void SAMPLE_SVP_NNIE_Acfree(void)
     SAMPLE_SVP_TRACE_INFO("Print and Save Acfree result:\n");
     (void)SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(&s_stAcfreeSoftwareParam.stDstScore,
         &s_stAcfreeSoftwareParam.stDstRoi, &s_stAcfreeSoftwareParam.stClassRoiNum,f32PrintResultThresh);
+
+    // s32Ret = SAMPLE_SVP_NNIE_PrintReportResultFloatPerm(&s_stAcfreeNnieParam);
+    // SAMPLE_SVP_CHECK_EXPR_GOTO(HI_SUCCESS != s32Ret,ACFREE_FAIL_0,SAMPLE_SVP_ERR_LEVEL_ERROR,
+    //     "Error,SAMPLE_SVP_NNIE_PrintReportResult failed!\n");
 
 
 ACFREE_FAIL_0:
@@ -3684,11 +3866,6 @@ void SAMPLE_SVP_NNIE_Yolov3(void)
     SAMPLE_SVP_TRACE_INFO("Yolov3 result:\n");
     (void)SAMPLE_SVP_NNIE_Detection_PrintResult(&s_stYolov3SoftwareParam.stDstScore,
         &s_stYolov3SoftwareParam.stDstRoi, &s_stYolov3SoftwareParam.stClassRoiNum,f32PrintResultThresh);
-
-    SAMPLE_SVP_TRACE_INFO("Save Yolov3 result:\n");
-    (void)SAMPLE_SVP_NNIE_Detection_SaveResult_Ruyi(&s_stYolov3SoftwareParam.stDstScore,
-        &s_stYolov3SoftwareParam.stDstRoi, &s_stYolov3SoftwareParam.stClassRoiNum,f32PrintResultThresh);
-
 
 YOLOV3_FAIL_0:
     SAMPLE_SVP_NNIE_Yolov3_Deinit(&s_stYolov3NnieParam,&s_stYolov3SoftwareParam,&s_stYolov3Model);
