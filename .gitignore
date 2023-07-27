@@ -11,3 +11,5 @@ sample_nnie_main
 results_ruyi\.txt
 
 results_ruyi_debug\.txt
+
+*.float

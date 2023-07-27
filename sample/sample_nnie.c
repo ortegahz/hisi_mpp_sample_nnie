@@ -3706,7 +3706,7 @@ INIT_FAIL_0:
 ******************************************************************************/
 void SAMPLE_SVP_NNIE_Acfree(void)
 {
-    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/students_lt_640x640.bgr";
+    HI_CHAR *pcSrcFile = "./data/nnie_image/rgb_planar/students_lt_640x640.rgb";
     HI_CHAR *pcModelName = "./data/nnie_model/detection/acfree.wk";
     HI_U32 u32PicNum = 1;
     HI_FLOAT f32PrintResultThresh = 0.0f;
