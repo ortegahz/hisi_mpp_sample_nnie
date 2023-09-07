@@ -27,7 +27,7 @@ extern "C" {
 #define SAMPLE_SVP_NNIE_UNSIGMOID(y)   (HI_FLOAT)(-1.0 * log((1.0 / y) - 1.0))
 
 #define SAMPLE_SVP_NNIE_KERNEL_LOCAL_SIZE (1024)
-#define SAMPLE_SVP_NNIE_COORDI_NUM  4      /*coordinate numbers*/
+#define SAMPLE_SVP_NNIE_COORDI_NUM  14      /*coordinate numbers*/
 #define SAMPLE_SVP_NNIE_PROPOSAL_WIDTH  6  /*the number of proposal values*/
 #define SAMPLE_SVP_NNIE_QUANT_BASE 4096    /*the base value*/
 #define SAMPLE_SVP_NNIE_IFDT_END_FLAG 5000 /*the end flag*/
@@ -47,7 +47,7 @@ extern "C" {
 #define SAMPLE_SVP_NNIE_YOLOV3_EACH_BBOX_INFER_RESULT_NUM   85 /*yolov3 inference result num of each bbox*/
 #define SAMPLE_SVP_NNIE_ACFREE_REPORT_BLOB_NUM    3 /*acfree report blob num*/
 #define SAMPLE_SVP_NNIE_ACFREE_EACH_GRID_BIAS_NUM 6 /*acfree bias num of each grid*/
-#define SAMPLE_SVP_NNIE_ACFREE_EACH_BBOX_INFER_RESULT_NUM   5 /*acfree inference result num of each bbox*/
+#define SAMPLE_SVP_NNIE_ACFREE_EACH_BBOX_INFER_RESULT_NUM   14 /*acfree inference result num of each bbox*/
 
 /*CNN GetTopN unit*/
 typedef struct hiSAMPLE_SVP_NNIE_CNN_GETTOPN_UNIT_S
@@ -89,6 +89,16 @@ typedef struct hiSAMPLE_SVP_NNIE_ACFREE_BBOX
     HI_FLOAT f32Xmax;
     HI_FLOAT f32Ymin;
     HI_FLOAT f32Ymax;
+    HI_FLOAT f32KPX0;
+    HI_FLOAT f32KPY0;
+    HI_FLOAT f32KPX1;
+    HI_FLOAT f32KPY1;
+    HI_FLOAT f32KPX2;
+    HI_FLOAT f32KPY2;
+    HI_FLOAT f32KPX3;
+    HI_FLOAT f32KPY3;
+    HI_FLOAT f32KPX4;
+    HI_FLOAT f32KPY4;
     HI_S32 s32ClsScore;
     HI_U32 u32ClassIdx;
     HI_U32 u32Mask;
