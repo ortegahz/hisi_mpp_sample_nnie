@@ -2530,6 +2530,22 @@ static HI_FLOAT SVP_NNIE_Acfree_GetMaxVal(HI_FLOAT *pf32Val,HI_U32 u32Num,
     return f32MaxTmp;
 }
 
+static HI_S32 SVP_NNIE_GetMaxValS32(HI_S32 *ps32Val, HI_U32 u32Num, HI_U32 *pu32MaxValueIndex)
+{
+    HI_S32 s32MaxTmp = ps32Val[0];
+    *pu32MaxValueIndex = 0;
+
+    for (HI_U32 i = 1; i < u32Num; i++)
+    {
+        if (ps32Val[i] > s32MaxTmp)
+        {
+            s32MaxTmp = ps32Val[i];
+            *pu32MaxValueIndex = i;
+        }
+    }
+    return s32MaxTmp;
+}
+
 /*****************************************************************************
 *   Prototype    : SVP_NNIE_GetMaxVal
 *   Description  : get max score value
@@ -2964,6 +2980,7 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
     HI_FLOAT f32Width;
     HI_FLOAT f32Height;
     HI_FLOAT f32ObjScore;
+    HI_FLOAT f32ClassScore;
     HI_U32 u32MaxValueIndex = 0;
     HI_FLOAT f32MaxScore;
     HI_S32 s32ClassScore = 0;
@@ -3002,12 +3019,13 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
         f32StrideHeight = (HI_FLOAT) (u32SrcHeight / au32GridNumHeight[i]);
 
         // printf("au32Stride[i] -> %d\n", au32Stride[i]);
-        // printf("au32GridNumHeight[%d] -> %d\n", i, au32GridNumHeight[i]);
-        // printf("au32GridNumWidth[%d] -> %d\n", i, au32GridNumWidth[i]);
+        printf("au32GridNumHeight[%d] -> %d\n", i, au32GridNumHeight[i]);
+        printf("au32GridNumWidth[%d] -> %d\n", i, au32GridNumWidth[i]);
         // printf("f32StrideWidth -> %f\n", f32StrideWidth);
         // printf("f32StrideHeight -> %f\n", f32StrideHeight);
         // printf("u32ConfThresh -> %d\n", u32ConfThresh);
         // printf("u32EachGridBbox -> %d\n", u32EachGridBbox);
+        printf("u32ClassNum -> %u\n", u32ClassNum);
 
         u32Offset = 0;
         ps32InputBlob = pps32InputData[i];
@@ -3032,11 +3050,12 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 //     fprintf(fp ,"%f \n", (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE);
                 // }
 
-                if (ps32InputBlob[u32Offset + 14] < s32ConfThresh) continue;
+                HI_S32 s32MaxScore = SVP_NNIE_GetMaxValS32(&ps32InputBlob[u32Offset + 4], u32ClassNum, &u32MaxValueIndex);
+                if (s32MaxScore < s32ConfThresh) continue;
 
-                f32ObjScore = (HI_FLOAT)(ps32InputBlob[u32Offset + 14]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                f32ObjScore = SAMPLE_SVP_NNIE_SIGMOID(f32ObjScore);
-                s32ClassScore = (HI_S32)(f32ObjScore*SAMPLE_SVP_NNIE_QUANT_BASE);
+                f32ClassScore = (HI_FLOAT)(s32MaxScore) / SAMPLE_SVP_NNIE_QUANT_BASE;
+                f32ClassScore = SAMPLE_SVP_NNIE_SIGMOID(f32ClassScore);
+                s32ClassScore = (HI_S32)(f32ClassScore*SAMPLE_SVP_NNIE_QUANT_BASE);
 
                 // printf("s32ClassScore -> %d\n", s32ClassScore);
                 // printf("f32ObjScore -> %f\n", f32ObjScore);
@@ -3046,31 +3065,11 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 f32OffsetTop = (HI_FLOAT)(ps32InputBlob[u32Offset + 1]) / SAMPLE_SVP_NNIE_QUANT_BASE;
                 f32OffsetRight = (HI_FLOAT)(ps32InputBlob[u32Offset + 2]) / SAMPLE_SVP_NNIE_QUANT_BASE;
                 f32OffsetBottom = (HI_FLOAT)(ps32InputBlob[u32Offset + 3]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPX0 = (HI_FLOAT)(ps32InputBlob[u32Offset + 4]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPY0 = (HI_FLOAT)(ps32InputBlob[u32Offset + 5]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPX1 = (HI_FLOAT)(ps32InputBlob[u32Offset + 6]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPY1 = (HI_FLOAT)(ps32InputBlob[u32Offset + 7]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPX2 = (HI_FLOAT)(ps32InputBlob[u32Offset + 8]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPY2 = (HI_FLOAT)(ps32InputBlob[u32Offset + 9]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPX3 = (HI_FLOAT)(ps32InputBlob[u32Offset + 10]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPY3 = (HI_FLOAT)(ps32InputBlob[u32Offset + 11]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPX4 = (HI_FLOAT)(ps32InputBlob[u32Offset + 12]) / SAMPLE_SVP_NNIE_QUANT_BASE;
-                HI_FLOAT f32OffsetKPY4 = (HI_FLOAT)(ps32InputBlob[u32Offset + 13]) / SAMPLE_SVP_NNIE_QUANT_BASE;
 
                 pstBbox[u32BboxNum].f32Xmin= ((HI_FLOAT)w - f32OffsetLeft + 0.5) * f32StrideWidth;
                 pstBbox[u32BboxNum].f32Ymin= ((HI_FLOAT)h - f32OffsetTop + 0.5) * f32StrideHeight;
                 pstBbox[u32BboxNum].f32Xmax= ((HI_FLOAT)w + f32OffsetRight + 0.5) * f32StrideWidth;
                 pstBbox[u32BboxNum].f32Ymax= ((HI_FLOAT)h + f32OffsetBottom + 0.5) * f32StrideHeight;
-                pstBbox[u32BboxNum].f32KPX0 = ((HI_FLOAT)w + f32OffsetKPX0 + 0.5) * f32StrideWidth;
-                pstBbox[u32BboxNum].f32KPY0 = ((HI_FLOAT)h + f32OffsetKPY0 + 0.5) * f32StrideHeight;
-                pstBbox[u32BboxNum].f32KPX1 = ((HI_FLOAT)w + f32OffsetKPX1 + 0.5) * f32StrideWidth;
-                pstBbox[u32BboxNum].f32KPY1 = ((HI_FLOAT)h + f32OffsetKPY1 + 0.5) * f32StrideHeight;
-                pstBbox[u32BboxNum].f32KPX2 = ((HI_FLOAT)w + f32OffsetKPX2 + 0.5) * f32StrideWidth;
-                pstBbox[u32BboxNum].f32KPY2 = ((HI_FLOAT)h + f32OffsetKPY2 + 0.5) * f32StrideHeight;
-                pstBbox[u32BboxNum].f32KPX3 = ((HI_FLOAT)w + f32OffsetKPX3 + 0.5) * f32StrideWidth;
-                pstBbox[u32BboxNum].f32KPY3 = ((HI_FLOAT)h + f32OffsetKPY3 + 0.5) * f32StrideHeight;
-                pstBbox[u32BboxNum].f32KPX4 = ((HI_FLOAT)w + f32OffsetKPX4 + 0.5) * f32StrideWidth;
-                pstBbox[u32BboxNum].f32KPY4 = ((HI_FLOAT)h + f32OffsetKPY4 + 0.5) * f32StrideHeight;
                 pstBbox[u32BboxNum].s32ClsScore = s32ClassScore;
                 pstBbox[u32BboxNum].u32Mask= 0;
                 pstBbox[u32BboxNum].u32ClassIdx = (HI_S32)(u32MaxValueIndex+1);
@@ -3079,19 +3078,20 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
         }
     }
 
-    // for (i = 0; i < u32BboxNum; i++)
-    // {
-    //     printf("pstBbox[%d].s32ClsScore before sort -> %d\n", i, pstBbox[i].s32ClsScore);
-    // }
+    for (i = 0; i < u32BboxNum; i++)
+    {
+        printf("pstBbox[%d].s32ClsScore before sort -> %d\n", i, pstBbox[i].s32ClsScore);
+    }
+    printf("u32BboxNum before nms -> %d\n", u32BboxNum);
 
     //quick sort
     (void)SVP_NNIE_Yolo_NonRecursiveArgQuickSort((HI_S32*)pstBbox, 0, u32BboxNum - 1,
-        sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32),14,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
+        sizeof(SAMPLE_SVP_NNIE_ACFREE_BBOX_S)/sizeof(HI_U32),4,(SAMPLE_SVP_NNIE_STACK_S*)ps32AssistBuf);
 
-    // for (i = 0; i < u32BboxNum; i++)
-    // {
-    //     printf("pstBbox[%d].s32ClsScore after sort -> %d\n", i, pstBbox[i].s32ClsScore);
-    // }
+    for (i = 0; i < u32BboxNum; i++)
+    {
+        printf("pstBbox[%d].s32ClsScore after sort -> %d\n", i, pstBbox[i].s32ClsScore);
+    }
 
     // nms
     (void)SVP_NNIE_Acfree_NonMaxSuppression(pstBbox, u32BboxNum, u32NmsThresh, u32MaxRoiNum);
@@ -3110,16 +3110,6 @@ static HI_S32 SVP_NNIE_Acfree_GetResult(HI_S32 **pps32InputData,HI_U32 au32GridN
                 *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32Ymin), 0);
                 *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(pstBbox[j].f32Xmax), u32SrcWidth);
                 *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(pstBbox[j].f32Ymax), u32SrcHeight);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPX0), 0)), u32SrcWidth);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPY0), 0)), u32SrcHeight);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPX1), 0)), u32SrcWidth);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPY1), 0)), u32SrcHeight);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPX2), 0)), u32SrcWidth);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPY2), 0)), u32SrcHeight);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPX3), 0)), u32SrcWidth);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPY3), 0)), u32SrcHeight);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPX4), 0)), u32SrcWidth);
-                *(ps32DstRoi++) = SAMPLE_SVP_NNIE_MIN((HI_S32)(SAMPLE_SVP_NNIE_MAX((HI_S32)(pstBbox[j].f32KPY4), 0)), u32SrcHeight);
                 *(ps32DstScore++) = pstBbox[j].s32ClsScore;
                 u32ClassRoiNum++;
             }
